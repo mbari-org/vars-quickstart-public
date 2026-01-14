@@ -10,7 +10,7 @@ This repo is based off an internal project used for running the VARS microservic
 
 ### What is VARS?
 
-VARS (Video Annotation and Reference System) is a comprehensive suite of microservices for managing and annotating underwater video data. This quickstart repository provides a streamlined way to deploy the full VARS stack using Docker Compose on the following MBARI servers
+VARS (Video Annotation and Reference System) is a comprehensive suite of microservices for managing and annotating underwater video data. This quickstart repository provides a streamlined way to deploy the full VARS stack using Docker Compose on the following server environments:
 
 1. localhost - Local testing server against a testing database
 2. namedhost - Production server on an intranet
@@ -22,6 +22,7 @@ VARS (Video Annotation and Reference System) is a comprehensive suite of microse
 - Approximately 8GB of available RAM
 - Network access to pull Docker images from Docker Hub
 - SSL certificates (can be generated with the built-in `mkcert` command)
+- Python for running support utilities (optional)
 
 ### Quick Start
 
