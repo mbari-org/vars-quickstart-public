@@ -213,9 +213,13 @@ Requires a VARS-compatible video player:
 
 ### [VARS Query](https://github.com/mbari-org/vars-query-vue)
 
+![VARS Query](etc/assets/images/vars-query-vue.png)
+
 A web application for searching and retrieving annotations, videos, and images. A link is available on the Welcome to the MBARI Media Management (M3) Server page (http://localhost).
 
 ### [VARS Knowledgebase Editor](https://github.com/mbari-org/kb)
+
+![VARS KB Editor](etc/assets/images/kb.png)
 
 A web application for editing the knowledge base (lexicon and phylogenetic tree of annotation terms). A link is available on the Welcome to the MBARI Media Management (M3) Server page (http://localhost).
 
@@ -224,6 +228,8 @@ A web application for editing the knowledge base (lexicon and phylogenetic tree 
 [VARS Gridview](https://github.com/mbari-org/vars-gridview) is a bulk editing tool for reviewing and correcting bounding box annotations, such as machine learning generated annotations.
 
 ### [Mondrian (alpha)](https://github.com/mbari-org/mondrian)
+
+![Mondrian](https://github.com/mbari-org/mondrian/raw/main/docs/assets/images/Mondrian_screenshot.png)
 
 [Mondrian](https://github.com/mbari-org/mondrian) is an image annotation application.
 
