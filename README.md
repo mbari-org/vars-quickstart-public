@@ -191,11 +191,13 @@ All services are accessible through the configured `VARS_WEB_SERVER` hostname vi
 - Check for typos in environment variable names
 - Not all services run as `root`, so allow docker to read all subdirectories in `./temp`: `sudo chgrp -R docker ./temp`
 
-### VARS Applications
+---
+
+## VARS Applications
 
 **vars-quickstart-public** provides the infrastructure to run various annotation applications. Below is a list of publicly available VARS apps.
 
-#### [VARS Annotation](https://github.com/mbari-org/vars-annotation)
+### [VARS Annotation](https://github.com/mbari-org/vars-annotation)
 
 Used to create annotations on video. Runs on Windows, macOS, and Linux. If you need a build for your OS, request one [here](https://github.com/mbari-media-management/vars-annotation/issues).
 
@@ -207,19 +209,19 @@ Requires a VARS-compatible video player:
 > [!IMPORTANT]
 > Videos must be registered in VARS before they can be annotated. Use: `varsq run vars_register_media.py --help` for more information.
 
-#### VARS Query
+### [VARS Query](https://github.com/mbari-org/vars-query-vue)
 
 A web application for searching and retrieving annotations, videos, and images. A link is available on the Welcome to the MBARI Media Management (M3) Server page (http://localhost).
 
-#### VARS Knowledgebase Editor
+### [VARS Knowledgebase Editor](https://github.com/mbari-org/kb)
 
 A web application for editing the knowledge base (lexicon and phylogenetic tree of annotation terms). A link is available on the Welcome to the MBARI Media Management (M3) Server page (http://localhost).
 
-#### VARS Gridview
+### [VARS Gridview](https://github.com/mbari-org/vars-gridview)
 
 [VARS Gridview](https://github.com/mbari-org/vars-gridview) is a bulk editing tool for reviewing and correcting bounding box annotations, such as machine learning generated annotations.
 
-#### Mondrian (alpha)
+###[Mondrian (alpha)](https://github.com/mbari-org/mondrian)
 
 [Mondrian](https://github.com/mbari-org/mondrian) is an image annotation application.
 
