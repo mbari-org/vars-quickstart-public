@@ -193,9 +193,11 @@ All services are accessible through the configured `VARS_WEB_SERVER` hostname vi
 
 ### VARS Applications
 
-#### VARS Annotation
+**vars-quickstart-public** provides the infrastructure to run various annotation applications. Below is a list of publicly available VARS apps.
 
-Used to create annotations on video. Runs on Windows, macOS, and Linux. If you nee a build for your OS, request one [here](https://github.com/mbari-media-management/vars-annotation/issues).
+#### [VARS Annotation](https://github.com/mbari-org/vars-annotation)
+
+Used to create annotations on video. Runs on Windows, macOS, and Linux. If you need a build for your OS, request one [here](https://github.com/mbari-media-management/vars-annotation/issues).
 
 Requires a VARS-compatible video player:
 
