@@ -14,9 +14,9 @@ def main(videoSequenceNames: List[str], outputDir: str) -> None:
 
     
     # Configure services
-    anno_url = os.environ["ANNOSAURUS_URL"]
-    vamp_url = os.environ["VAMPIRE_SQUID_URL"]
-    beholder_url = os.environ["BEHOLDER_URL"]
+    anno_url = os.environ["ANNOSAURUS_PUBLIC_URL"]
+    vamp_url = os.environ["VAMPIRESQUID_PUBLIC_URL"]
+    beholder_url = os.environ["BEHOLDER_PUBLIC_URL"]
     beholder_key = os.environ["BEHOLDER_API_KEY"]
     vampire_squid = VampireSquid(vamp_url)
     beholder = Beholder(beholder_url, beholder_key)

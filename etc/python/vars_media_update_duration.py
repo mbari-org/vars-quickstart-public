@@ -10,8 +10,8 @@ __author__ = "Brian Schlining (modified by Rob Godfrey)"
 __copyright__ = "Copyright 2022, Monterey Bay Aquarium Research Institute"
 
 def main(filename: str, duration: str):
-    vamp_url = os.environ["VAMPIRE_SQUID_URL"]
-    vamp_secret = os.environ["VAMPIRESQUID_CLIENT_SECRET"]
+    vamp_url = os.environ["VAMPIRESQUID_PUBLIC_URL"]
+    vamp_secret = os.environ["VAMPIRESQUID_BASICJWT_CLIENT_SECRET"]
     vampire_squid = VampireSquid(vamp_url)
     media = vampire_squid.list_media_by_filename(filename)
     if len(media) == 1:

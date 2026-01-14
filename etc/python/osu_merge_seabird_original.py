@@ -13,9 +13,9 @@ __copyright__ = "Copyright 2024, Monterey Bay Aquarium Research Institute"
 
 
 def main(cnv_file: str, video_sequence_name: str, year: int) -> None:
-    anno_url = os.environ["ANNOSAURUS_URL"]
-    anno_secret = os.environ["ANNOSAURUS_CLIENT_SECRET"]
-    vamp_url = os.environ["VAMPIRE_SQUID_URL"]
+    anno_url = os.environ["ANNOSAURUS_PUBLIC_URL"]
+    anno_secret = os.environ["ANNOSAURUS_BASICJWT_CLIENT_SECRET"]
+    vamp_url = os.environ["VAMPIRESQUID_PUBLIC_URL"]
     # Uncomment theses lines if you want to test the script without the microservices.
     # You'll need to comment out the lines below that use the microservices too.
     # data = __parse(cnv_file, year)

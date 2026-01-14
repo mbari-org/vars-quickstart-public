@@ -7,9 +7,9 @@ from microservices import Annosaurus, VampireSquid
 
 
 def main():
-    anno_url = os.environ["ANNOSAURUS_URL"]
-    anno_secret = os.environ["ANNOSAURUS_CLIENT_SECRET"]
-    vamp_url = os.environ["VAMPIRE_SQUID_URL"]
+    anno_url = os.environ["ANNOSAURUS_PUBLIC_URL"]
+    anno_secret = os.environ["ANNOSAURUS_BASICJWT_CLIENT_SECRET"]
+    vamp_url = os.environ["VAMPIRESQUID_PUBLIC_URL"]
     vampire_squid = VampireSquid(vamp_url)
     annosaurus = Annosaurus(anno_url)
     ok_time = iso8601.parse_date("2000-01-01T00:00:00Z")

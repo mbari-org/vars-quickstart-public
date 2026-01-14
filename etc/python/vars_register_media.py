@@ -38,8 +38,8 @@ def sha512_from_uri(uri: str) -> str:
     return checksum
 
 def main(camera_id: str, deployment_id: str, uri: str, extracttime: bool=False) -> None:
-    vam_url = os.environ["VAMPIRE_SQUID_URL"]
-    vam_secret = os.environ["VAMPIRESQUID_CLIENT_SECRET"]
+    vam_url = os.environ["VAMPIRESQUID_PUBLIC_URL"]
+    vam_secret = os.environ["VAMPIRESQUID_BASICJWT_CLIENT_SECRET"]
     vampire_squid = VampireSquid(vam_url)
 
     existing_media = vampire_squid.find_media_by_uri(uri)

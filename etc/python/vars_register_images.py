@@ -126,10 +126,10 @@ def __find_or_create_image_media(video_sequence_name: str,
 
 
 def main(video_sequence_name: str, url: str, force: bool = False):
-    anno_url = os.environ["ANNOSAURUS_URL"]
-    anno_secret = os.environ["ANNOSAURUS_CLIENT_SECRET"]
-    vamp_url = os.environ["VAMPIRE_SQUID_URL"]
-    vamp_secret = os.environ["VAMPIRESQUID_CLIENT_SECRET"]
+    anno_url = os.environ["ANNOSAURUS_PUBLIC_URL"]
+    anno_secret = os.environ["ANNOSAURUS_BASICJWT_CLIENT_SECRET"]
+    vamp_url = os.environ["VAMPIRESQUID_PUBLIC_URL"]
+    vamp_secret = os.environ["VAMPIRESQUID_BASICJWT_CLIENT_SECRET"]
 
     vampire_squid = VampireSquid(vamp_url)
     media = vampire_squid.find_media_by_video_sequence_name(

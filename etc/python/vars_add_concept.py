@@ -7,7 +7,7 @@ __author__ = "Brian Schlining"
 __copyright__ = "Copyright 2025, Monterey Bay Aquarium Research Institute"
 
 def main(concept: str) -> None:
-    oni_url = os.environ["ONI_URL"]
+    oni_url = os.environ["ONI_PUBLIC_URL"]
     oni = Oni(oni_url)
     # Prompt for username
     username = input('Enter your VARS username: ')

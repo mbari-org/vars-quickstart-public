@@ -1,8 +1,10 @@
 ![MBARI logo](etc/assets/images/logo-mbari-3b.png)
 
-# VARS Quickstart @ MBARI
+# VARS Quickstart @ PUBLIC
 
-Docker-based quickstart/orchestrator for MBARI's VARS (Video Annotation and Reference System) microservices stack.
+Docker-based quickstart/orchestrator for MBARI's VARS (Video Annotation and Reference System) microservices stack. This stack is for public use.
+
+This repo is based off an internal project used for running the VARS microservices on a single server on MBARI's ships.
 
 ## For Users
 
@@ -10,10 +12,7 @@ Docker-based quickstart/orchestrator for MBARI's VARS (Video Annotation and Refe
 
 VARS (Video Annotation and Reference System) is a comprehensive suite of microservices for managing and annotating underwater video data. This quickstart repository provides a streamlined way to deploy the full VARS stack using Docker Compose on the following MBARI servers
 
-1. docker-rc.rc.mbari.org - R/V David Packard
-2. docker-dp.dp.mbari.org - R/V Rachel Carson
-3. gehenna.shore.mbari.org - Internal testing server against a testing database
-4. localhost - Local testing server against a testing database
+1. localhost - Local testing server against a testing database
 
 ### Prerequisites
 
@@ -184,10 +183,7 @@ vars-quickstart-mbari/
 ├── etc/
 │   └── env/
 │       ├── core.env.sh     # Core environment variables (overrides)
-│       ├── docker-dp.env   # Docker R/V David Packard configuration for docker-dp.dp.mbari.org
-│       ├── docker-rc.env   # Docker R/V Rachel Carson configuration for docker-rc.rc.mbari.org
 │       ├── localhost.env   # Docker testing configuration for localhost
-│       ├── gehenna.env     # Docker testing configuration for gehenna.shore.mbari.org
 │       └── *.env           # Additional environment targets
 └── temp/                   # Temporary files, SSL certificates
 ```
@@ -216,8 +212,7 @@ Source files must define these prerequisite variables:
 - `VARS_LOG_LEVEL` - Logging level (TRACE, DEBUG, INFO, WARN, ERROR)
 - `VARS_WEB_SERVER` - Web server hostname
 - `VARS_DATABASE_SERVER` - Database server hostname
-- `SQLSERVER_PWD` / `SQLSERVER_USER` - M3 database credentials
-- `VARS_KB_PWD` / `VARS_KB_USER` - VARS KB database credentials
+- `POSTGRES_PWD` / `POSTGRES_USER` - Database credentials
 - `BEHOLDER_CACHE_DIR`, `FRAMEGRABS_DIR`, `M3_TEMP_DIR` - File system paths
 - `SSL_CERT_FILE`, `SSL_KEY_FILE` - SSL certificate paths
 

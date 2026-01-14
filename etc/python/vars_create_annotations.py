@@ -29,12 +29,12 @@ if __name__ == "__main__":
                         help="The json file to read",
                         type=str)
     args = parser.parse_args()
-    anno_url = os.environ["ANNOSAURUS_URL"]
-    client_secret = os.environ["ANNOSAURUS_CLIENT_SECRET"]
+    anno_url = os.environ["ANNOSAURUS_PUBLIC_URL"]
+    client_secret = os.environ["ANNOSAURUS_BASICJWT_CLIENT_SECRET"]
     if not anno_url:
-        raise ValueError("ANNOSAURUS_URL environment variable is not set")
+        raise ValueError("ANNOSAURUS_PUBLIC_URL environment variable is not set")
     if not client_secret:
-        raise ValueError("ANNOSAURUS_CLIENT_SECRET environment variable is not set")
+        raise ValueError("ANNOSAURUS_BASICJWT_CLIENT_SECRET environment variable is not set")
     if not os.path.exists(args.filename):
         raise ValueError(f"File {args.filename} does not exist")
     if not os.path.isfile(args.filename):

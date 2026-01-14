@@ -18,9 +18,9 @@ __copyright__ = "Copyright 2022, Monterey Bay Aquarium Research Institute"
 #33.24405747,-164.7702751,95.075,15.6756,8.5349,34.5105,20170916T184219Z
 
 def main(file_name, video_sequence_name: str, delimiter=","):
-    anno_url = os.environ["ANNOSAURUS_URL"]
-    anno_secret = os.environ["ANNOSAURUS_CLIENT_SECRET"]
-    vamp_url = os.environ["VAMPIRE_SQUID_URL"]
+    anno_url = os.environ["ANNOSAURUS_PUBLIC_URL"]
+    anno_secret = os.environ["ANNOSAURUS_BASICJWT_CLIENT_SECRET"]
+    vamp_url = os.environ["VAMPIRESQUID_PUBLIC_URL"]
     annosaurus = Annosaurus(anno_url)
     vampire_squid = VampireSquid(vamp_url)
     media = vampire_squid.find_media_by_video_sequence_name(video_sequence_name)

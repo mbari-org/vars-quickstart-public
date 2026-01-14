@@ -11,8 +11,8 @@ __copyright__ = "Copyright 2024, Monterey Bay Aquarium Research Institute"
 def main(videoSequenceNames: List[str]) -> None:
     # print(f"Generating CSV for images from {videoSequenceNames}")
     # Get all video reference ids
-    anno_url = os.environ["ANNOSAURUS_URL"]
-    vamp_url = os.environ["VAMPIRE_SQUID_URL"]
+    anno_url = os.environ["ANNOSAURUS_PUBLIC_URL"]
+    vamp_url = os.environ["VAMPIRESQUID_PUBLIC_URL"]
     vampire_squid = VampireSquid(vamp_url)
 
     # Get all media for the video sequence names
