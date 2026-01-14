@@ -13,6 +13,7 @@ This repo is based off an internal project used for running the VARS microservic
 VARS (Video Annotation and Reference System) is a comprehensive suite of microservices for managing and annotating underwater video data. This quickstart repository provides a streamlined way to deploy the full VARS stack using Docker Compose on the following MBARI servers
 
 1. localhost - Local testing server against a testing database
+2. namedhost - Production server on an intranet
 
 ### Prerequisites
 
@@ -123,6 +124,36 @@ The `varsq docker` command passes through any Docker Compose command:
 
 # Remove stopped containers
 ./varsq docker rm <service-name>
+```
+
+### Python Scripts
+
+The repository includes Python utility scripts for common VARS operations. These scripts are located in `etc/python/`.
+
+#### Setting Up Python Environment
+
+1. **Create a virtual environment** (recommended)
+   ```bash
+   python3 -m venv venv
+   source venv/bin/activate
+   ```
+
+2. **Install dependencies**
+   ```bash
+   pip install -r etc/python/requirements.txt
+   ```
+
+#### Running Scripts
+
+```bash
+# List available scripts
+./varsq scripts
+
+# Run a script
+./varsq run <script-name.py> [arguments]
+
+# Example: Register media files
+./varsq run vars_register_media.py --help
 ```
 
 ### Services Included
