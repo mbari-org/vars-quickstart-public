@@ -221,7 +221,7 @@ A web application for editing the knowledge base (lexicon and phylogenetic tree 
 
 [VARS Gridview](https://github.com/mbari-org/vars-gridview) is a bulk editing tool for reviewing and correcting bounding box annotations, such as machine learning generated annotations.
 
-###[Mondrian (alpha)](https://github.com/mbari-org/mondrian)
+### [Mondrian (alpha)](https://github.com/mbari-org/mondrian)
 
 [Mondrian](https://github.com/mbari-org/mondrian) is an image annotation application.
 
