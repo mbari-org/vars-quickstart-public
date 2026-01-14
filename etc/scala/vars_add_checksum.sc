@@ -99,7 +99,6 @@ if (args.length != 1) {
   |   M3_PUBLIC_JDBC_URL    - JDBC URL to the M3_VARS database
   |
   | Arguments:
-
   |  url: The url (file or http) to the medias
   |  
   |""".stripMargin)
