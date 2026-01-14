@@ -1,0 +1,217 @@
+
+services:
+
+  annosaurus:
+    container_name: annosaurus
+    image: mbari/annosaurus
+    restart: always
+    ports:
+      - "${ANNOSAURUS_PUBLIC_PORT}:8080"
+      - "${ANNOSAURUS_MESSAGING_ZEROMQ_PORT}:5563"
+    environment:
+      - "io.netty.noUnsafe:true"
+      - BASICJWT_CLIENT_SECRET=${ANNOSAURUS_BASICJWT_CLIENT_SECRET}
+      - BASICJWT_ISSUER=${VARS_JWT_ISSUER}
+      - BASICJWT_SIGNING_SECRET=${ANNOSAURUS_BASICJWT_SIGNING_SECRET}
+      - DATABASE_DRIVER=${M3_JDBC_DRIVER}
+      - DATABASE_LOG_LEVEL=WARN
+      - DATABASE_PASSWORD=${ANNOSAURUS_DATABASE_PASSWORD}
+      - DATABASE_URL=${ANNOSAURUS_DATABASE_URL}
+      - DATABASE_USER=${ANNOSAURUS_DATABASE_USER}
+      - LOGBACK_LEVEL=${LOGBACK_LEVEL}
+      - MESSAGING_ZEROMQ_ENABLE=${ANNOSAURUS_MESSAGING_ZEROMQ_ENABLE}
+      - MESSAGING_ZEROMQ_PORT=${ANNOSAURUS_MESSAGING_ZEROMQ_PORT}
+      - MESSAGING_ZEROMQ_TOPIC=${ANNOSAURUS_MESSAGING_ZEROMQ_TOPIC}
+    networks:
+      - m3
+
+  beholder:
+    container_name: beholder
+    image: mbari/beholder
+    restart: always
+    ports:
+      - "${BEHOLDER_PUBLIC_PORT}:8080"
+    environment:
+      - BEHOLDER_API_KEY=${BEHOLDER_API_KEY}
+      - BEHOLDER_CACHE_FREEPCT=${BEHOLDER_CACHE_FREEPCT}
+      - BEHOLDER_CACHE_ROOT=/opt/beholder/cache
+      - BEHOLDER_CACHE_SIZE=${BEHOLDER_CACHE_SIZE}
+      - LOGBACK_LEVEL=${LOGBACK_LEVEL}
+    volumes:
+      - ${BEHOLDER_CACHE_DIR}:/opt/beholder/cache
+    networks:
+      - m3
+
+  charybdis:
+    container_name: charybdis
+    image: mbari/charybdis
+    restart: always
+    ports:
+      - "${CHARYBDIS_PUBLIC_PORT}:8080"
+    environment:
+      - ANNOTATION_SERVICE_PAGESIZE=${CHARYBDIS_ANNOTATION_SERVICE_PAGESIZE}
+      - ANNOTATION_SERVICE_TIMEOUT=${CHARYBDIS_ANNOTATION_SERVICE_TIMEOUT}
+      - LOGBACK_LEVEL=${LOGBACK_LEVEL}
+      - MEDIA_SERVICE_TIMEOUT=${CHARYBDIS_MEDIA_SERVICE_TIMEOUT}
+      - RAZIEL_SERVICE_URL=${RAZIEL_PUBLIC_URL}
+    networks:
+      - m3
+    depends_on:
+      - raziel
+
+  nginx:
+    container_name: nginx
+    build: nginx/.
+    image: m3-nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ${NGINX_ROOT_DIR}:/usr/local/nginx/html:ro
+      - ${FRAMEGRABS_DIR}:/usr/local/nginx/framegrabs:ro
+      - ${MEDIA_DIR}:/usr/local/nginx/media:ro
+      - ${SSL_CERT_FILE}:/usr/local/nginx/private/cert/server.crt:ro
+      - ${SSL_KEY_FILE}:/usr/local/nginx/private/cert/server.key:ro
+    networks:
+      - m3
+    depends_on:
+      - annosaurus
+      - beholder
+      - charybdis
+      - oni
+      - panoptes
+      - raziel
+      - vampire-squid
+
+  oni:
+    container_name: oni
+    image: mbari/oni
+    restart: always
+    ports:
+      - "${ONI_PUBLIC_PORT}:8080"
+    environment:
+      - BASICJWT_CLIENT_SECRET=${ONI_BASICJWT_CLIENT_SECRET}
+      - BASICJWT_ISSUER=${VARS_JWT_ISSUER}
+      - BASICJWT_SIGNING_SECRET=${ONI_BASICJWT_SIGNING_SECRET}
+      - DATABASE_DRIVER=${M3_JDBC_DRIVER}
+      - DATABASE_LOGLEVEL=WARN
+      - DATABASE_PASSWORD=${ONI_DATABASE_PASSWORD}
+      - DATABASE_URL=${ONI_DATABASE_URL}
+      - DATABASE_USER=${ONI_DATABASE_USER}
+      - LOGBACK_LEVEL=${LOGBACK_LEVEL}
+    networks:
+      - m3
+
+  panoptes:
+    container_name: panoptes
+    image: mbari/panoptes
+    restart: always
+    ports:
+      - "${PANOPTES_PUBLIC_PORT}:8080" # PAN_APP_PORT needs to match the one in nginx.conf
+    volumes:
+      - ${FRAMEGRABS_DIR}:${PANOPTES_ROOT_DIRECTORY}
+    environment:
+      - AUTHENTICATION_SERVICE=org.mbari.m3.panoptes.auth.BasicJwtService
+      - BASICJWT_CLIENT_SECRET=${PANOPTES_BASICJWT_CLIENT_SECRET}
+      - BASICJWT_JWT_ISSUER=${VARS_JWT_ISSUER}
+      - BASICJWT_SIGNING_SECRET=${PANOPTES_BASICJWT_SIGNING_SECRET}
+      - HTTP_CONTEXT_PATH=${PANOPTES_HTTP_CONTEXT_PATH}
+      - LOGBACK_LEVEL=${LOGBACK_LEVEL}
+      - PANOPTES_FILE_ARCHIVER=${PANOPTES_FILE_ARCHIVER}
+      - PANOPTES_MBARI_IMAGE_ARCHIVE_ROOT=${PANOPTES_ROOT_DIRECTORY}
+      - PANOPTES_MBARI_IMAGE_ARCHIVE_URL=${PANOPTES_ROOT_URL}
+    networks:
+      - m3
+
+  prometheus:
+    container_name: prometheus
+    build: prometheus/.
+    image: m3-prometheus
+    restart: always
+    ports: 
+      - "9090:9090"
+    volumes:
+      - ${PROMETHEUS_DIR}:/prometheus
+    depends_on:
+      - annosaurus
+      - vampire-squid
+    networks:
+      - m3
+
+  raziel:
+    container_name: raziel
+    image: mbari/raziel
+    restart: always
+    ports:
+      - "${RAZIEL_PUBLIC_PORT}:8080"
+    environment:
+      - ANNOSAURUS_INTERNAL_URL=${ANNOSAURUS_DOCKER_URL}
+      - ANNOSAURUS_SECRET=${ANNOSAURUS_BASICJWT_CLIENT_SECRET}
+      - ANNOSAURUS_TIMEOUT=${RAZIEL_ANNOSAURUS_TIMEOUT}
+      - ANNOSAURUS_URL=${ANNOSAURUS_PUBLIC_URL}
+      - BEHOLDER_INTERNAL_URL=${BEHOLDER_DOCKER_URL}
+      - BEHOLDER_SECRET=${BEHOLDER_API_KEY}
+      - BEHOLDER_TIMEOUT=${RAZIEL_BEHOLDER_TIMEOUT}
+      - BEHOLDER_URL=${BEHOLDER_PUBLIC_URL}
+      - CHARYBDIS_INTERNAL_URL=${CHARYBDIS_DOCKER_URL}
+      - CHARYBDIS_URL=${CHARYBDIS_PUBLIC_URL}
+      - LOGBACK_LEVEL=${LOGBACK_LEVEL}
+      - ONI_INTERNAL_URL=${ONI_DOCKER_URL}
+      - ONI_SECRET=${ONI_BASICJWT_CLIENT_SECRET}
+      - ONI_URL=${ONI_PUBLIC_URL}
+      - PANOPTES_INTERNAL_URL=${PANOPTES_DOCKER_URL}
+      - PANOPTES_SECRET=${PANOPTES_BASICJWT_CLIENT_SECRET}
+      - PANOPTES_URL=${PANOPTES_PUBLIC_URL}
+      - RAZIEL_HTTP_CONTEXT=${RAZIEL_HTTP_CONTEXT}
+      - RAZIEL_JWT_SIGNING_SECRET=${RAZIEL_JWT_SIGNING_SECRET}
+      - RAZIEL_MASTER_KEY=${RAZIEL_MASTER_KEY}
+      - SKIMMER_INTERNAL_URL=${SKIMMER_DOCKER_URL}
+      - SKIMMER_URL=${SKIMMER_PUBLIC_URL}
+      - VAMPIRE_SQUID_INTERNAL_URL=${VAMPIRESQUID_DOCKER_URL}
+      - VAMPIRE_SQUID_SECRET=${VAMPIRESQUID_BASICJWT_CLIENT_SECRET}
+      - VAMPIRE_SQUID_URL=${VAMPIRESQUID_PUBLIC_URL}
+    networks:
+      - m3
+
+  skimmer:
+    container_name: skimmer
+    image: mbari/skimmer
+    restart: always
+    ports:
+      - "${SKIMMER_PUBLIC_PORT}:8080"
+    environment:
+      - APP_HOST=skimmer
+      - APP_PORT=8080
+      - APP_WORKERS=6
+      - BEHOLDER_API_KEY=${BEHOLDER_API_KEY}
+      - BEHOLDER_URL=${BEHOLDER_DOCKER_URL}
+      - CACHE_DIR=/opt/skimmer/cache
+      - IMAGE_CACHE_SIZE=${SKIMMER_IMAGE_CACHE_SIZE_MB}
+      - ROI_CACHE_SIZE=${SKIMMER_ROI_CACHE_SIZE_MB}
+    volumes:
+      - ${SKIMMER_CACHE_DIR}:/opt/skimmer/cache
+    networks:
+      - m3
+    depends_on:
+      - beholder
+
+  vampire-squid:
+    container_name: vampire-squid
+    image: mbari/vampire-squid
+    restart: always
+    ports:
+      - "${VAMPIRESQUID_PUBLIC_PORT}:8080"
+    environment:
+      - BASICJWT_CLIENT_SECRET=${VAMPIRESQUID_BASICJWT_CLIENT_SECRET}
+      - BASICJWT_ISSUER=${VARS_JWT_ISSUER}
+      - BASICJWT_SIGNING_SECRET=${VAMPIRESQUID_BASICJWT_SIGNING_SECRET}
+      - DATABASE_DRIVER=${M3_JDBC_DRIVER}
+      - DATABASE_PASSWORD=${VAMPIRESQUID_DATABASE_PASSWORD}
+      - DATABASE_URL=${VAMPIRESQUID_DATABASE_URL}
+      - DATABASE_USER=${VAMPIRESQUID_DATABASE_USER}
+    networks:
+      - m3
+
+networks:
+  m3:

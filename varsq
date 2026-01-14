@@ -1,0 +1,269 @@
+#!/usr/bin/env bash
+
+# Brian Schlining
+# 2025-12-10
+
+# -- GLOBAL VARIABLES
+# Base directory of the script
+BASE_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+# Script Name (renamed from PROG to SCRIPT_NAME for consistency)
+SCRIPT_NAME=$(basename "$0")
+
+# docker directory
+DOCKER_DIR="$BASE_DIR/docker"
+
+# Path to the etc/env directory
+ETC_ENV_DIR="$BASE_DIR/etc/env"
+
+# Path to the env file. 
+ENV_FILE="$DOCKER_DIR/env.sh"
+
+# Path to the core env file
+CORE_ENV_FILE="$BASE_DIR/etc/env/core.env.sh"
+
+# -- HELPER FUNCTIONS
+_help() {
+    echo "Usage: $SCRIPT_NAME <target> <subcommand> [options]"
+    echo ""
+    echo "Subcommands:"
+    echo "  build     Build the docker containers"
+    echo "  configure Set environment variables for the target"
+    echo "  docker    Run docker compose commands (pass through)"
+    echo "  env       Show environment variables for the target"
+    echo "  mkcert    Generate self-signed SSL certificate and key"
+    echo "  resolved  Show resolved environment variables (evaluated values)"
+    echo "  start     Start the docker containers"
+    echo "  stop      Stop the docker containers"
+    echo "  status    Show the status of the docker containers"
+    echo "  targets   List available targets enviroments"
+    echo "  update    Update the docker images"
+    echo ""
+}
+
+# -- Subcommand functions
+if [ -f "$ENV_FILE" ]; then
+    # Source the environment variables if the env file exists. 
+    # shellcheck source=/dev/null
+    source "$ENV_FILE"
+fi
+
+_build() {
+    echo "Building service using docker compose..."
+    _docker build "$@"
+}
+
+_configure() {
+    local source_file="$1"
+
+    if [ "$source_file" == "--help" ] || [ -z "$source_file" ]; then
+        echo "Usage: $SCRIPT_NAME configure <path/to/source/file>"
+        echo "Example: $SCRIPT_NAME configure ./config/production.env"
+        return 1
+    fi
+
+    if [ ! -f "$source_file" ]; then
+        echo "Error: Source file not found at '$source_file'" >&2
+        return 1
+    fi
+
+    if [ ! -f "$CORE_ENV_FILE" ]; then
+        echo "Error: Core environment file not found at '$CORE_ENV_FILE'" >&2
+        echo "Please create a base file with core variables." >&2
+        return 1
+    fi
+
+    echo "Merging files into '$ENV_FILE'..."
+    mkdir -p "$DOCKER_DIR" # Ensure docker directory exists
+
+    # 1. Start clean and add source file content first
+    cat "$source_file" > "$ENV_FILE"
+    echo "" >> "$ENV_FILE" # Add a newline for readability
+
+    # 2. Append core file content
+    cat "$CORE_ENV_FILE" >> "$ENV_FILE"
+
+    if [ $? -eq 0 ]; then
+        echo "Configuration successful."
+    else
+        echo "Error: Failed to merge the files." >&2
+        return 1
+    fi
+}
+
+_docker() {
+    if [ ! -d "$DOCKER_DIR" ]; then
+        echo "Error: Docker directory not found at '$DOCKER_DIR'." >&2
+        return 1
+    fi
+
+    # TODO: Check that SSL certificates exist if needed
+
+    echo "Executing 'docker compose $*' inside $DOCKER_DIR/"
+    # Run docker compose in a subshell, passing all arguments provided to _docker
+    (cd "$DOCKER_DIR" && docker compose "$@")
+}
+
+_env() {
+    echo "--- Contents of $ENV_FILE ---"
+    if [ -f "$ENV_FILE" ]; then
+        cat "$ENV_FILE"
+    else
+        echo "Error: $ENV_FILE not found. Run the 'configure' command first." >&2
+        return 1
+    fi
+    echo "--------------------------------"
+}
+
+_mkcert() {
+    local cert_path="${BASE_DIR}/temp/ssl/server.crt"
+    local key_path="${BASE_DIR}/temp/ssl/server.key"
+    mkdir -p "$(dirname "$cert_path")"
+
+    # if mkcert is installed, use it
+    if command -v mkcert >/dev/null 2>&1; then
+        echo "mkcert found. Generating local CA and self-signed certificate..."
+        # mkcert -install
+        mkcert -cert-file "$cert_path" -key-file "$key_path" "localhost" "*.localhost" "127.0.0.1" "::1"
+        return
+    fi
+    # Fallback to openssl if mkcert is not available
+    echo "mkcert not found. Falling back to openssl..."
+
+    echo "Generating self-signed SSL certificate at '$cert_path' and key at '$key_path'..."
+
+    openssl req -x509 -nodes -days 3650 -newkey rsa:2048 \
+        -keyout "$key_path" \
+        -out "$cert_path" \
+        -subj "/C=US/ST=California/L=Monterey/O=MBARI/OU=IT/CN=localhost"
+
+    if [ $? -eq 0 ]; then
+        echo "Self-signed SSL certificate and key generated successfully."
+    else
+        echo "Error: Failed to generate SSL certificate and key." >&2
+        return 1
+    fi
+}
+
+_resolved() {
+    if [ ! -f "$ENV_FILE" ]; then
+        echo "Error: $ENV_FILE not found. Run the 'configure' command first." >&2
+        return 1
+    fi
+
+    echo "--- Resolved environment variables from $ENV_FILE ---"
+    # Source the env file in a subshell and print all exported variables with their resolved values
+    (
+        # shellcheck source=/dev/null
+        source "$ENV_FILE"
+        # Use env to get all environment variables, filter for those starting with common prefixes
+        # Sort for easier reading
+        env | grep -E '^(ANNOSAURUS_|BEHOLDER_|CHARYBDIS_|ONI_|PANOPTES_|RAZIEL_|SKIMMER_|VAMPIRESQUID_|VAMPIRE_SQUID_|VARS_|M3_|LOGBACK_|BASICJWT_|DATABASE_|MESSAGING_|HTTP_|AUTHENTICATION_|IMAGE_|JWT_|MAC_|NGINX_|FRAMEGRABS_|MEDIA_|SSL_|SQLSERVER_)' | sort
+    )
+    echo "------------------------------------------------------"
+}
+
+_start() {
+    echo "Starting service using docker compose..."
+    echo "    Using environment file at $ENV_FILE"
+    echo "    Using temp dir at $M3_TEMP_DIR"
+    echo "    Ensuring SSL certificate and key exist at ${SSL_CERT_FILE} and ${SSL_KEY_FILE}..."
+    if [ ! -f "${SSL_CERT_FILE}" ] || [ ! -f "${SSL_KEY_FILE}" ]; then
+        echo "SSL certificate or key not found. Run 'varsq mkcert' to generate self-signed certificate and key for localhost testing."
+        exit 1
+    fi
+    _docker up -d "$@"
+}
+
+_stop() {
+    echo "Stopping service using docker compose..."
+    _docker down "$@"
+}
+
+_status() {
+    echo "Checking status..."
+    _docker ps "$@"
+}
+
+_targets() {
+    echo "Searching for *.env files in $ETC_ENV_DIR..."
+
+    if [ ! -d "$ETC_ENV_DIR" ]; then
+        echo "Directory not found: $ETC_ENV_DIR" >&2
+        echo "Please create the directory and add some .env files to test this command." >&2
+        return 1
+    fi
+
+    # Use find to list files recursively with their full path
+    find "$ETC_ENV_DIR" -maxdepth 1 -name "*.env" -type f
+    
+    if [ $? -ne 0 ]; then
+         echo "No *.env files found in $ETC_ENV_DIR."
+    fi
+}
+
+_update() {
+    echo "Updating docker images..."
+    # The original script just echoed, but this actually runs the pulls
+    docker pull mbari/annosaurus
+    docker pull mbari/charybdis
+    docker pull mbari/oni
+    docker pull mbari/panoptes
+    docker pull mbari/raziel
+    docker pull mbari/vampire-squid
+    docker pull nginx:latest
+    docker pull prom/prometheus
+}
+
+# Main logic
+# Check if the first argument is empty or a help flag
+if [[ -z "$1" ]] || [[ "$1" == "-h" ]] || [[ "$1" == "--help" ]]; then
+    _help
+    exit 0
+fi
+
+# Store the subcommand and shift arguments to the left
+SUBCOMMAND=$1
+shift
+
+# Case statement to handle subcommands
+case "$SUBCOMMAND" in
+    build)
+        _build "$@"
+        ;;
+    configure)
+        _configure "$@"
+        ;;
+    docker)
+        _docker "$@"
+        ;;
+    env)
+        _env "$@"
+        ;;
+    mkcert)
+        _mkcert "$@"
+        ;;
+    resolved)
+        _resolved "$@"
+        ;;
+    start)
+        _start "$@"
+        ;;
+    stop)
+        _stop "$@"
+        ;;
+    status)
+        _status "$@"
+        ;;
+    targets)
+        _targets "$@"
+        ;;
+    update)
+        _update "$@"
+        ;;
+    *)
+        echo "Error: Unknown subcommand '$SUBCOMMAND'" >&2
+        _help
+        exit 1
+        ;;
+esac

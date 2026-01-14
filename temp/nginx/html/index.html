@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <title>M3 - MBARI Media Management</title>
+  <meta name="author" content="">
+  <meta name="description" content="">
+  <link rel="stylesheet" href="" />
+  <link rel="stylesheet" href="resources/css/default.css" />
+  <!-- <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet"> -->
+</head>
+
+<body>
+
+  <section id="mainheader">
+    <img src="resources/images/logo-mbari-3b.png" alt="MBARI" />
+    <header>
+      <h1>Welcome to the MBARI Media Managment (M3) Server</h1>
+      <details>This server is running <a href="https://www.nginx.com/">NGINX</a>. It is also acting as a proxy for the
+        REST services. The source code for the NGINX docker build is located at
+        <a
+          href="https://bitbucket.org/mbari/m3-deployspace/src/master/nginx/">https://bitbucket.org/mbari/m3-deployspace/src/master/nginx/</a>
+      </details>
+    </header>
+  </section>
+
+  <section id="quicklinks">
+    <a href="https://bitbucket.org/account/user/mbari/projects/M3">Bitbucket</a> |
+    <a href="https://github.com/mbari-orgt">GitHub</a> |
+  </section>
+
+  <section>
+    <h2>Web Apps</h2>
+    <ul>
+      <li><a href="query">VARS Query</a></li>
+      <li><a href="kbeditor">VARS Knowledge-base Editor</a></li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Media Access</h2>
+    <ul>
+      <li><a href="media/">Browse videos</a></li>
+      <li><a href="framegrabs/">Browse framegrabs</a></li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>System Status</h2>
+    <div>
+      <ul>
+        <li><a href="/" onclick="javascript:event.target.port=3000">Grafana Data Visualizations</a></li>
+        <li><a href="/" onclick="javascript:event.target.port=9090">Prometheus Dashboard</a></li>
+      </ul>
+    </div>
+  </section>
+
+
+  <section id="index">
+    <h2>M3 Services</h2>
+    <section class="info">
+      <h3><a href="https://github.com/mbari-org/raziel">Raziel</a></h3>
+        <div>Raziel provides service configuration information, such as microservice URLs and access credentials, to VARS Applications. If needed, use <a href="config">http://[this server name]/config</a> as the configuration URL in VARS Annotation and VARS Gridview.</div>
+        <ul>
+          <li><a href="/docs/" onclick="javascript:event.target.port=8400">Swagger docs</a></li>
+          <li><a href="config/health">Service Health</a></li>
+          <li><a href="config/health/status">Health of all M3 services</a></li>
+        </ul>
+      </li>
+    </section>
+
+    <section class="info">
+      <h3><a href="https://github.com/mbari-org/annosaurus">Annosaurus</a></h3>
+      <div>Annosaurus stores and retrieves annotation information. The default endpoint is <a href="anno">http://[this server name/anno</a></div>
+      <ul>
+        <li><a href="/docs/" onclick="javascript:event.target.port=8082">Swagger docs</a></li>
+        <li><a href="anno/v1/health">Service Health</a></li>
+        <li><a href="anno/v1/imagedmoments?limit=10">Find a few imaged moments</a></li>
+      </ul>
+    </section>
+
+    <section class="info">
+      <h3><a href="https://github.com/mbari-org/vampiresquid">Vampire-squid</a></h3>
+      <div>Vampire-squid is a video asset manager that organizes videos by dive or deployment. The default endpoint is <a href="vam">http://[this server name]/vam</a></div>
+      <ul>
+        <li><a href="/docs/" onclick="javascript:event.target.port=8084">Swagger docs</a></li>
+        <li><a href="vam/v1/health">Service Health</a></li>
+        <li><a href="vam/v1/videosequences/names">Show all deployment IDs (aka video sequence names)</a></li>
+      </ul>
+    </section>
+
+    <section class="info">
+      <h3><a href="https://github.com/mbari-org/oni">Oni</a></h3>
+      <div>Oni provides access to the taxonomy used by MBARI's annotation systems and also manages user accounts and user preferences.. The default endpoint is <a href="kb">http://[this server name]/oni</a></div>
+      <ul>
+        <li><a href="/docs/" onclick="javascript:event.target.port=8083">Swagger docs</a></li>
+        <li><a href="kb/v1/health">Service Health</a></li>
+        <li><a href="kb/v1/phylogeny/up/Nanomia">Show phylogeny branch down to the genus <i>Nanomia</i></li>
+          <li><a href="kb/v1/users">Show all users</a></li>
+      </ul>
+    </section>
+
+    <section class="info">
+      <h3><a href="https://github.com/mbari-org/panoptes">Panoptes</a></h3>
+      <div>Panoptes archives framegrabs from annotation applications</div>
+      <ul>
+        <li><a href="/docs/" onclick="javascript:event.target.port=8085">Swagger docs</a></li>
+        <li><a href="/panoptes/v1/health">Service Health</a></li>
+      </ul>
+    </section>
+
+    <section class="info">
+      <h3><a href="https://github.com/mbari-org/beholder">Beholder</a></h3>
+      <div>Beholder extracts on-demand images from video. </div>
+      <ul>
+        <li><a href="/docs" onclick="javascript:event.target.port=8088">Swagger docs</a></li>
+        <li><a href="/capture/health">Service Health</a></li>
+      </ul>
+    </section>
+
+
+  </section>
+
+  <script src=""></script>
+</body>
+
+</html>

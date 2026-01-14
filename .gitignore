@@ -1,0 +1,4 @@
+.DS_Store
+docker/env.sh
+**/*.crt
+**/*.key
