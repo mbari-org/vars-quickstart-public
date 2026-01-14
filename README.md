@@ -424,7 +424,9 @@ When contributing to this repository:
 
 ### License
 
-Copyright MBARI (Monterey Bay Aquarium Research Institute)
+Licensed under the Apache License, Version 2.0. See [LICENSE](LICENSE) for details.
+
+Copyright 2025 Monterey Bay Aquarium Research Institute (MBARI)
 
 ### Support
 
