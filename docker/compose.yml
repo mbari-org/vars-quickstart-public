@@ -22,6 +22,8 @@ services:
       - MESSAGING_ZEROMQ_ENABLE=${ANNOSAURUS_MESSAGING_ZEROMQ_ENABLE}
       - MESSAGING_ZEROMQ_PORT=${ANNOSAURUS_MESSAGING_ZEROMQ_PORT}
       - MESSAGING_ZEROMQ_TOPIC=${ANNOSAURUS_MESSAGING_ZEROMQ_TOPIC}
+    depends_on:
+      - postgres
     networks:
       - m3
 
@@ -100,6 +102,8 @@ services:
       - DATABASE_URL=${ONI_DATABASE_URL}
       - DATABASE_USER=${ONI_DATABASE_USER}
       - LOGBACK_LEVEL=${LOGBACK_LEVEL}
+    depends_on:
+      - postgres
     networks:
       - m3
 
@@ -121,6 +125,23 @@ services:
       - PANOPTES_FILE_ARCHIVER=${PANOPTES_FILE_ARCHIVER}
       - PANOPTES_MBARI_IMAGE_ARCHIVE_ROOT=${PANOPTES_ROOT_DIRECTORY}
       - PANOPTES_MBARI_IMAGE_ARCHIVE_URL=${PANOPTES_ROOT_URL}
+    networks:
+      - m3
+
+  postgres:
+    image: postgres:16
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PWD}
+      - POSTGRES_DB=${M3_DATABASE_NAME}
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - ${POSTGRES_DIR}:/var/lib/postgresql/data
+      - ${DOCKER_ENV_DIR}/postgres/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
+      - ${DOCKER_ENV_DIR}/postgres/my-postgres.conf:/etc/postgresql/postgresql.conf
     networks:
       - m3
 
@@ -210,6 +231,8 @@ services:
       - DATABASE_PASSWORD=${VAMPIRESQUID_DATABASE_PASSWORD}
       - DATABASE_URL=${VAMPIRESQUID_DATABASE_URL}
       - DATABASE_USER=${VAMPIRESQUID_DATABASE_USER}
+    depends_on:
+      - postgres
     networks:
       - m3
 

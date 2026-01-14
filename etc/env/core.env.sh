@@ -10,28 +10,27 @@
 #   NGINX_ROOT_DIR       - Directory containing html content for NGINX to serve
 #   PROMETHEUS_DIR       - Directory for Prometheus to write to.
 #   SKIMMER_CACHE_DIR    - Directory that Skimmer writes its cache to.
-#   SQLSERVER_PWD        - Password for the account for the M3_ANNOTATIONS and M3_VIDEO_ASSETS databases.
-#   SQLSERVER_USER       - User for the account for the M3_ANNOTATIONS and M3_VIDEO_ASSETS databases.
+#   POSTGRES_PWD         - Password for the account for the M3_ANNOTATIONS and M3_VIDEO_ASSETS databases.
+#   POSTGRES_USER        - User for the account for the M3_ANNOTATIONS and M3_VIDEO_ASSETS databases.
 #   SSL_CERT_FILE        - Path to the SSL certificate file used by Nginx.
 #   SSL_KEY_FILE         - Path to the SSL key file used by Nginx.
 #   VARS_DATABASE_SERVER - The database server hosting the M3 and VARS databases.
-#   VARS_KB_PWD          - Password for the account for the VARS_KB database.
-#   VARS_KB_USER         - User for the account for the VARS_KB database. 
 #   VARS_LOG_LEVEL       - Adjust logging level for all services: TRACE, DEBUG, INFO, WARN, ERROR
 #   VARS_WEB_SERVER      - The name of the web server hosting the VARS/M3 microservices
 
 # -- Shared Environment Variables --
 export LOGBACK_LEVEL=${VARS_LOG_LEVEL}
 export M3_JDBC_DRIVER=org.postgresql.Driver
-export M3_DOCKER_JDBC_URL="jdbc:postgresql://postgres:5432/M3_VARS?sslmode=disable&stringType=unspecified"
-export M3_PUBLIC_JDBC_URL="jdbc:postgresql://${VARS_DATABASE_SERVER}:5432/M3_VARS?sslmode=disable&stringType=unspecified"
+export M3_DATABASE_NAME="M3_VARS"
+export M3_DOCKER_JDBC_URL="jdbc:postgresql://postgres:5432/${M3_DATABASE_NAME}?sslmode=disable&stringType=unspecified"
+export M3_PUBLIC_JDBC_URL="jdbc:postgresql://${VARS_DATABASE_SERVER}:5432/${M3_DATABASE_NAME}?sslmode=disable&stringType=unspecified"
 export M3_SERVER_URL="https://${VARS_WEB_SERVER}"
 
 # -- Annosaurus Environment Variables --
-export ANNOSAURUS_DATABASE_PASSWORD="${SQLSERVER_PWD}"
+export ANNOSAURUS_DATABASE_PASSWORD="${POSTGRES_PWD}"
 export ANNOSAURUS_DATABASE_URL_FOR_APPS="${M3_PUBLIC_JDBC_URL}"
 export ANNOSAURUS_DATABASE_URL="${M3_DOCKER_JDBC_URL}"
-export ANNOSAURUS_DATABASE_USER="${SQLSERVER_USER}"
+export ANNOSAURUS_DATABASE_USER="${POSTGRES_USER}"
 export ANNOSAURUS_DOCKER_URL="http://annosaurus:8080/v1"
 export ANNOSAURUS_MESSAGING_ZEROMQ_ENABLE=true
 export ANNOSAURUS_MESSAGING_ZEROMQ_PORT=5563
@@ -57,9 +56,9 @@ export CHARYBDIS_PUBLIC_PORT=8086
 export CHARYBDIS_PUBLIC_URL="${M3_SERVER_URL}/references/v1"
 
 # -- Oni Environment Variables --
-export ONI_DATABASE_PASSWORD=${VARS_KB_PWD}
-export ONI_DATABASE_URL="${M3_JDBC_BASE_URL};databaseName=VARS_KB;trustServerCertificate=true"
-export ONI_DATABASE_USER="${VARS_KB_USER}"
+export ONI_DATABASE_PASSWORD=${POSTGRES_PWD}
+export ONI_DATABASE_URL="${M3_DOCKER_JDBC_URL}"
+export ONI_DATABASE_USER="${POSTGRES_USER}"
 export ONI_DOCKER_URL="http://oni:8080/v1"
 export ONI_PUBLIC_PORT=8083
 export ONI_PUBLIC_URL="${M3_SERVER_URL}/kb/v1"
@@ -90,9 +89,9 @@ export SKIMMER_PUBLIC_URL="${M3_SERVER_URL}/skimmer"
 export SKIMMER_ROI_CACHE_SIZE_MB=500
 
 # -- VampireSquid Environment Variables --
-export VAMPIRESQUID_DATABASE_PASSWORD="${SQLSERVER_PWD}"
-export VAMPIRESQUID_DATABASE_URL="${M3_JDBC_BASE_URL};databaseName=M3_VIDEO_ASSETS;trustServerCertificate=true"
-export VAMPIRESQUID_DATABASE_USER="${SQLSERVER_USER}"
+export VAMPIRESQUID_DATABASE_PASSWORD="${POSTGRES_PWD}"
+export VAMPIRESQUID_DATABASE_URL="${M3_DOCKER_JDBC_URL}"
+export VAMPIRESQUID_DATABASE_USER="${POSTGRES_USER}"
 export VAMPIRESQUID_DOCKER_URL="http://vampire-squid:8080/v1"
 export VAMPIRESQUID_PUBLIC_PORT=8084
 export VAMPIRESQUID_PUBLIC_URL="${M3_SERVER_URL}/vam/v1"
