@@ -2,6 +2,10 @@
 
 # VARS Quickstart @ PUBLIC
 
+[![Docker](https://img.shields.io/badge/Docker-Ready-blue?logo=docker)](https://www.docker.com/)
+[![Release](https://img.shields.io/github/v/release/mbari-org/m3-quickstart)](https://github.com/mbari-org/vars-quickstart-public/releases)
+[![License](https://img.shields.io/github/license/mbari-org/vars-quickstart-public)](LICENSE)
+
 Docker-based quickstart/orchestrator for MBARI's VARS (Video Annotation and Reference System) microservices stack. This stack is for public use.
 
 This repo is based off an internal project used for running the VARS microservices on a single server on MBARI's ships.
