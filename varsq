@@ -187,8 +187,46 @@ _run() {
 }
 
 _scripts() {
-    # TODO list py and sc scripts in etc/python and etc/scala
-    
+    local python_dir="$BASE_DIR/etc/python"
+    local scala_dir="$BASE_DIR/etc/scala"
+    local found=0
+
+    echo "Available scripts for './varsq run <script>':"
+    echo ""
+
+    # List Python scripts
+    if [ -d "$python_dir" ]; then
+        local py_scripts
+        py_scripts=$(find "$python_dir" -maxdepth 1 -name "*.py" -type f 2>/dev/null | sort)
+        if [ -n "$py_scripts" ]; then
+            echo "Python scripts (etc/python/):"
+            while IFS= read -r script; do
+                echo "  $(basename "$script")"
+            done <<< "$py_scripts"
+            echo ""
+            found=1
+        fi
+    fi
+
+    # List Scala scripts
+    if [ -d "$scala_dir" ]; then
+        local sc_scripts
+        sc_scripts=$(find "$scala_dir" -maxdepth 1 -name "*.sc" -type f 2>/dev/null | sort)
+        if [ -n "$sc_scripts" ]; then
+            echo "Scala scripts (bin/scala/):"
+            while IFS= read -r script; do
+                echo "  $(basename "$script")"
+            done <<< "$sc_scripts"
+            echo ""
+            found=1
+        fi
+    fi
+
+    if [ $found -eq 0 ]; then
+        echo "No scripts found."
+        echo "  Python scripts should be placed in: $python_dir"
+        echo "  Scala scripts should be placed in: $scala_dir"
+    fi
 }
 
 _start() {
@@ -276,6 +314,9 @@ case "$SUBCOMMAND" in
         ;;
     run)
         _run "$@"
+        ;;
+    scripts)
+        _scripts "$@"
         ;;
     start)
         _start "$@"
