@@ -199,6 +199,8 @@ All services are accessible through the configured `VARS_WEB_SERVER` hostname vi
 
 ### [VARS Annotation](https://github.com/mbari-org/vars-annotation)
 
+![VARS Annotation](https://github.com/mbari-org/vars-annotation/raw/main/docs/assets/images/vars-annotation.png)
+
 Used to create annotations on video. Runs on Windows, macOS, and Linux. If you need a build for your OS, request one [here](https://github.com/mbari-media-management/vars-annotation/issues).
 
 Requires a VARS-compatible video player:
