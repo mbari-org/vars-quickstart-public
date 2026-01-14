@@ -190,6 +190,39 @@ All services are accessible through the configured `VARS_WEB_SERVER` hostname vi
 - Check for typos in environment variable names
 - Not all services run as `root`, so allow docker to read all subdirectories in `./temp`: `sudo chgrp -R docker ./temp`
 
+### VARS Applications
+
+#### VARS Annotation
+
+Used to create annotations on video. Runs on Windows, macOS, and Linux. If you nee a build for your OS, request one [here](https://github.com/mbari-media-management/vars-annotation/issues).
+
+Requires a VARS-compatible video player:
+
+- [Sharktopoda](https://github.com/mbari-org/Sharktopoda)
+- [jsharktopoda](https://github.com/mbari-org/jsharktopoda)
+
+> [!IMPORTANT]
+> Videos must be registered in VARS before they can be annotated. Use: `varsq run vars_register_media.py --help` for more information.
+
+#### VARS Query
+
+A web application for searching and retrieving annotations, videos, and images. A link is available on the Welcome to the MBARI Media Management (M3) Server page (http://localhost).
+
+#### VARS Knowledgebase Editor
+
+A web application for editing the knowledge base (lexicon and phylogenetic tree of annotation terms). A link is available on the Welcome to the MBARI Media Management (M3) Server page (http://localhost).
+
+#### VARS Gridview
+
+[VARS Gridview](https://github.com/mbari-org/vars-gridview) is a bulk editing tool for reviewing and correcting bounding box annotations, such as machine learning generated annotations.
+
+#### Mondrian (alpha)
+
+[Mondrian](https://github.com/mbari-org/mondrian) is an image annotation application.
+
+> [!IMPORTANT]
+> Images must be registered in VARS before they can be annotated. Use: `varsq run vars_register_images.py --help` for more information.
+
 ---
 
 ## For Developers
