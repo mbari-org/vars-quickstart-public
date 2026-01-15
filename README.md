@@ -4,6 +4,7 @@
 
 [![Docker](https://img.shields.io/badge/Docker-Ready-blue?logo=docker)](https://www.docker.com/)
 [![Release](https://img.shields.io/github/v/release/mbari-org/vars-quickstart-public)](https://github.com/mbari-org/vars-quickstart-public/releases)
+![GitHub Release Date](https://img.shields.io/github/release-date/mbari-org/vars-quickstart-public)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 
 Docker-based quickstart/orchestrator for MBARI's VARS (Video Annotation and Reference System) microservices stack. This stack is for public use.
