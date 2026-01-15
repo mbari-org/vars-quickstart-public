@@ -369,7 +369,7 @@ class VampireSquid(JWTAuthtication):
 
 
     def update_media(self, 
-                     media: JsonArray,
+                     media: dict,
                      client_secret: str = None,
                      jwt: str = None) -> JsonArray:
         jwt = self.authorize(client_secret, jwt)
