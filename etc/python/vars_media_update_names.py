@@ -7,7 +7,7 @@ import json
 __author__ = "Brian Schlining"
 __copyright__ = "Copyright 2026, Monterey Bay Aquarium Research Institute"
 
-def main(filename: str, new_video_sequence_name: str, new_video_name: str):
+def main(filename: str, new_video_sequence_name: str, new_video_name: str, camera_id: str = None) -> dict:
     vamp_url = os.environ["VAMPIRESQUID_PUBLIC_URL"]
     vamp_secret = os.environ["VAMPIRESQUID_BASICJWT_CLIENT_SECRET"]
     vampire_squid = VampireSquid(vamp_url)
@@ -15,9 +15,15 @@ def main(filename: str, new_video_sequence_name: str, new_video_name: str):
     if len(media) == 1:
         print(f"Updating names of {filename} to sequence: {new_video_sequence_name}, video: {new_video_name}")
         data = dict()
+        if (camera_id is not None):
+            data['camera_id'] = camera_id
+        else:
+            data['camera_id'] = media[0]['camera_id']
         data["video_reference_uuid"] = media[0]['video_reference_uuid']
         data['video_sequence_name'] = new_video_sequence_name
         data['video_name'] = new_video_name
+        data['start_timestamp'] = media[0]['start_timestamp']
+        data['duration_millis'] = media[0]['duration_millis']
         return vampire_squid.update_media(data, client_secret=vamp_secret)
     elif len(media) > 1:
         print(
@@ -37,7 +43,9 @@ if __name__ == "__main__":
                         help="The new video sequence name to set")
     parser.add_argument("new_video_name",
                         help="The new video name to set")
+    parser.add_argument("--camera_id",
+                        help="Option camera ID if you want to set it explicitly")
 
     args = parser.parse_args()
-    data = main(args.media_file_name, args.new_video_sequence_name, args.new_video_name)
+    data = main(args.media_file_name, args.new_video_sequence_name, args.new_video_name, args.camera_id)
     print(json.dumps(data, indent=2))
