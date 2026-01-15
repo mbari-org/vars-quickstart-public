@@ -95,3 +95,8 @@ export VAMPIRESQUID_DATABASE_USER="${POSTGRES_USER}"
 export VAMPIRESQUID_DOCKER_URL="http://vampire-squid:8080/v1"
 export VAMPIRESQUID_PUBLIC_PORT=8084
 export VAMPIRESQUID_PUBLIC_URL="${M3_SERVER_URL}/vam/v1"
+
+# -- Script Helpers --
+# Allow Python requests to use the SSL cert file
+export REQUESTS_CA_BUNDLE="${SSL_CERT_FILE}"
+export PYTHONHTTPSVERIFY=0

@@ -126,7 +126,8 @@ _mkcert() {
     if command -v mkcert >/dev/null 2>&1; then
         echo "mkcert found. Generating local CA and self-signed certificate..."
         # mkcert -install
-        mkcert -cert-file "$cert_path" -key-file "$key_path" "localhost" "*.localhost" "127.0.0.1" "::1"
+        mkcert -cert-file "$cert_path" -key-file "$key_path" "localhost" "*.localhost" "127.0.0.1" "::1" "$VARS_WEB_SERVER"
+        
         return
     fi
     # Fallback to openssl if mkcert is not available
@@ -137,7 +138,8 @@ _mkcert() {
     openssl req -x509 -nodes -days 3650 -newkey rsa:2048 \
         -keyout "$key_path" \
         -out "$cert_path" \
-        -subj "/C=US/ST=California/L=Monterey/O=MBARI/OU=IT/CN=localhost"
+        -subj "/C=US/ST=California/L=Monterey/O=MBARI/OU=IT/CN=localhost" \
+        -addext "subjectAltName=DNS:localhost,DNS:*.local,IP:${VARS_WEB_SERVER},IP:127.0.0.1"
 
     if [ $? -eq 0 ]; then
         echo "Self-signed SSL certificate and key generated successfully."
