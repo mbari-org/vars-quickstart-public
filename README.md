@@ -2,6 +2,7 @@
 
 # VARS Quickstart @ PUBLIC
 
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/mbari-org/vars-quickstart-public)
 [![Docker](https://img.shields.io/badge/Docker-Ready-blue?logo=docker)](https://www.docker.com/)
 [![Release](https://img.shields.io/github/v/release/mbari-org/vars-quickstart-public)](https://github.com/mbari-org/vars-quickstart-public/releases)
 ![GitHub Release Date](https://img.shields.io/github/release-date/mbari-org/vars-quickstart-public)
