@@ -181,18 +181,21 @@ _mkcert() {
 
     print_info "Generating self-signed SSL certificate at '$cert_path' and key at '$key_path'..."
 
+    # Determine if VARS_WEB_SERVER is an IP address or a hostname
+    local san_entry
+    if [[ "$VARS_WEB_SERVER" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]] || [[ "$VARS_WEB_SERVER" =~ : ]]; then
+        san_entry="IP:${VARS_WEB_SERVER}"
+    else
+        san_entry="DNS:${VARS_WEB_SERVER}"
+    fi
+
     openssl req -x509 -nodes -days 3650 -newkey rsa:2048 \
         -keyout "$key_path" \
         -out "$cert_path" \
         -subj "/C=US/ST=California/L=Monterey/O=MBARI/OU=IT/CN=localhost" \
-        -addext "subjectAltName=DNS:localhost,DNS:*.local,IP:${VARS_WEB_SERVER},IP:127.0.0.1"
+        -addext "subjectAltName=DNS:localhost,DNS:*.local,${san_entry},IP:127.0.0.1"
 
-    if [ $? -eq 0 ]; then
-        print_success "Self-signed SSL certificate and key generated successfully."
-    else
-        print_error "Failed to generate SSL certificate and key."
-        return 1
-    fi
+    print_success "Self-signed SSL certificate and key generated successfully."
 }
 
 _resolved() {
@@ -213,17 +216,19 @@ _resolved() {
 _run() {
     load_env
 
-    SCRIPT_NAME=$(basename -- "$1")
-    SCRIPT_EXTENSION="${SCRIPT_NAME##*.}"
+    local script_name=$(basename -- "$1")
+    local script_ext="${script_name##*.}"
 
-    if [ "$SCRIPT_EXTENSION" = "py" ]; then
+    if [ "$script_ext" = "py" ]; then
         python "$BASE_DIR/etc/python/$1" "${@:2}"
-        exit
-    elif [ "$SCRIPT_EXTENSION" = "sc" ]; then
-        source "$BASE_DIR/bin/docker-env.sh"
+        return
+    elif [ "$script_ext" = "sc" ]; then
         export VARS_PWD="$VARS_KB_DATABASE_PASSWORD"
-        "$BASE_DIR/bin/scala/$1" "${@:2}"
-        exit
+        "$BASE_DIR/etc/scala/$1" "${@:2}"
+        return
+    else
+        print_error "Unsupported script type: .$script_ext (expected .py or .sc)"
+        return 1
     fi
 
 }
@@ -255,7 +260,7 @@ _scripts() {
         local sc_scripts
         sc_scripts=$(find "$scala_dir" -maxdepth 1 -name "*.sc" -type f 2>/dev/null | sort)
         if [ -n "$sc_scripts" ]; then
-            print_info "Scala scripts (bin/scala/):"
+            print_info "Scala scripts (etc/scala/):"
             while IFS= read -r script; do
                 echo "  -  $(basename "$script")"
             done <<< "$sc_scripts"
@@ -313,10 +318,12 @@ _update() {
     print_info "Updating docker images..."
     # The original script just echoed, but this actually runs the pulls
     docker pull mbari/annosaurus
+    docker pull mbari/beholder
     docker pull mbari/charybdis
     docker pull mbari/oni
     docker pull mbari/panoptes
     docker pull mbari/raziel
+    docker pull mbari/skimmer
     docker pull mbari/vampire-squid
     docker pull nginx:latest
     docker pull prom/prometheus
