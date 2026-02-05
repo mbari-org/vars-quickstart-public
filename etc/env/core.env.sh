@@ -39,7 +39,6 @@ export ANNOSAURUS_PUBLIC_PORT=8082
 export ANNOSAURUS_PUBLIC_URL="${M3_SERVER_URL}/anno/v1"
 
 # -- Beholder Environment Variables --
-export BEHOLDER_API_KEY=foo
 export BEHOLDER_CACHE_FREEPCT=0.20
 export BEHOLDER_CACHE_SIZE=1000
 export BEHOLDER_DOCKER_URL="http://beholder:8080"
