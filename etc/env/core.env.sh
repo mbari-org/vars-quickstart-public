@@ -67,6 +67,7 @@ export ONI_URL="${M3_SERVER_URL}/kb/v1"
 export PANOPTES_HTTP_CONTEXT_PATH=/panoptes
 export PANOPTES_DOCKER_URL="http://panoptes:8080${PANOPTES_HTTP_CONTEXT_PATH}/v1"
 export PANOPTES_FILE_ARCHIVER="org.mbari.m3.panoptes.services.OldStyleMbariDiskArchiver"
+export PANOPTES_MAX_SIZE_MB=50
 export PANOPTES_PUBLIC_PORT=8085
 export PANOPTES_PUBLIC_URL="${M3_SERVER_URL}${PANOPTES_HTTP_CONTEXT_PATH}/v1"
 export PANOPTES_ROOT_DIRECTORY=/framegrabs
