@@ -56,12 +56,14 @@ VARS Quickstart (varsq) - Docker orchestration for VARS services and databases
 Usage: $SCRIPT_NAME <target> <subcommand> [options]
 
 Commands:
+    backup    Backup the postgres database (timestamped pg_dumpall)
     build     Build the docker containers
     configure Set environment variables for the target
     docker    Run docker compose commands (pass through)
     env       Show environment variables for the target
     mkcert    Generate self-signed SSL certificate and key
     resolved  Show resolved environment variables (evaluated values)
+    restore   Restore the postgres database from the most recent backup
     run       Run a python or scala script
     scripts   List available python and scala scripts
     start     Start the docker containers
@@ -69,6 +71,7 @@ Commands:
     status    Show the status of the docker containers
     targets   List available targets enviroments
     update    Update the docker images
+    upgrade   Upgrade postgres to the major version pinned in docker/compose.yml (experimental)
 
 Examples:
     $(basename "$0") targets
@@ -93,13 +96,205 @@ load_env() {
 }
 
 
-_build() {
+_backup() {
+    # Backup all postgres databases to a timestamped file from the backup directory.
     load_env
+
+    local backup_dir="/var/lib/postgresql/data/backup"
+    local timestamp
+    timestamp=$(date +%Y%m%dT%H%M%SZ)
+    local backup_file="${backup_dir}/backup_${timestamp}.sql"
+
+    print_info "Creating backup directory inside postgres container..."
+    (cd "$DOCKER_DIR" && docker compose exec --user postgres -T postgres \
+        bash -c "mkdir -p '${backup_dir}'")
+
+    print_info "Dumping all databases to ${backup_file}..."
+    (cd "$DOCKER_DIR" && docker compose exec --user postgres -T postgres \
+        bash -c "pg_dumpall --clean --if-exists > '${backup_file}'")
+
+    print_success "Backup complete: ${backup_file}"
+}
+
+_restore() {
+    # Restore the postgres database from the most recent backup file in the backup directory.
+    load_env
+
+    local backup_dir="/var/lib/postgresql/data/backup"
+
+    print_info "Searching for most recent backup in ${backup_dir}..."
+    local most_recent
+    most_recent=$(cd "$DOCKER_DIR" && docker compose exec -T postgres \
+        bash -c "ls -t ${backup_dir}/*.sql 2>/dev/null | head -1" 2>/dev/null) || true
+    most_recent=$(echo "$most_recent" | tr -d '[:space:]')
+
+    if [ -z "$most_recent" ]; then
+        print_error "No backup files found in ${backup_dir}. Run '$(basename "$0") backup' first."
+        exit 1
+    fi
+
+    print_info "Most recent backup: ${most_recent}"
+    print_info "Creating safety backup of current state before restore..."
+    _backup
+
+    print_info "Stopping all services for restore..."
+    (cd "$DOCKER_DIR" && docker compose down)
+
+    print_info "Starting postgres for restore..."
+    (cd "$DOCKER_DIR" && docker compose up -d postgres)
+
+    print_info "Waiting for postgres to be ready..."
+    local retries=30
+    while ! (cd "$DOCKER_DIR" && docker compose exec -T postgres pg_isready -U "$POSTGRES_USER") 2>/dev/null; do
+        retries=$((retries - 1))
+        if [ $retries -le 0 ]; then
+            print_error "Postgres did not become ready in time. Aborting restore."
+            exit 1
+        fi
+        sleep 1
+    done
+
+    print_info "Restoring from ${most_recent}..."
+    (cd "$DOCKER_DIR" && docker compose exec --user postgres -T postgres \
+        psql -f "${most_recent}" postgres)
+
+    print_success "Database restored from $(basename "${most_recent}")"
+
+    print_info "Restarting all services..."
+    (cd "$DOCKER_DIR" && docker compose up -d)
+
+    print_success "Restore complete. All services are running."
+}
+
+_upgrade() {
+    # Experimental: Upgrade postgres to the major version pinned in docker/compose.yml. 
+    # This is a destructive operation that will create a new pgdata directory and restore 
+    # from the most recent backup. The old pgdata directory will be archived with a timestamp
+    # for safety, but should be removed once the upgrade is verified.
+    load_env
+
+    # --- Detect current major version from the PG_VERSION file in pgdata ---
+    local pg_version_file="${POSTGRES_DIR}/pgdata/PG_VERSION"
+    if [ ! -f "$pg_version_file" ]; then
+        print_error "No postgres data directory found at ${POSTGRES_DIR}/pgdata"
+        print_info  "Has postgres been initialized? Try: $(basename "$0") start"
+        exit 1
+    fi
+    local current_major
+    current_major=$(tr -d '[:space:]' < "$pg_version_file")
+
+    # --- Detect target major version from compose.yml image tag ---
+    local target_tag
+    target_tag=$(grep 'image: postgres:' "$DOCKER_DIR/compose.yml" \
+        | awk -F: '{print $NF}' | tr -d '[:space:]')
+    local target_major
+    target_major=$(echo "$target_tag" | cut -d. -f1)
+
+    print_info "Running postgres major version: ${current_major}"
+    print_info "Target  postgres major version: ${target_major}"
+
+    if [ "$target_major" -lt "$current_major" ]; then
+        print_error "Downgrading postgres (${current_major} → ${target_major}) is not supported."
+        print_info  "Update the image tag in docker/compose.yml to a newer major version."
+        exit 1
+    fi
+
+    if [ "$current_major" -eq "$target_major" ]; then
+        print_warning "Already on major version ${current_major}. No major upgrade needed."
+        print_info   "For a minor version update: $(basename "$0") docker pull postgres && $(basename "$0") docker restart postgres"
+        exit 0
+    fi
+
+    print_info "Major version upgrade: ${current_major} → ${target_major}"
+
+    # --- Step 1: Backup current state ---
+    print_info "Backing up current database before upgrade..."
+    _backup
+
+    # --- Step 2: Pull the new image ---
+    print_info "Pulling postgres:${target_tag}..."
+    (cd "$DOCKER_DIR" && docker compose pull postgres)
+
+    # --- Step 3: Stop all services ---
+    print_info "Stopping all services..."
+    (cd "$DOCKER_DIR" && docker compose down)
+
+    # --- Step 4: Archive old pgdata only (backup/ dir stays in place under POSTGRES_DIR) ---
+    local pgdata_dir="${POSTGRES_DIR}/pgdata"
+    local archive_name="pgdata_pre_upgrade_${current_major}_$(date +%Y%m%dT%H%M%SZ)"
+    local archive_dir="${POSTGRES_DIR}/${archive_name}"
+    print_info "Archiving old data directory to ${archive_name}..."
+    mv "$pgdata_dir" "$archive_dir"
+
+    # --- Step 5: Start fresh postgres (triggers initdb on empty pgdata) ---
+    print_info "Starting fresh postgres ${target_major} instance..."
+    (cd "$DOCKER_DIR" && docker compose up -d postgres)
+
+    # --- Step 6: Wait for postgres to be ready ---
+    print_info "Waiting for postgres to be ready..."
+    local retries=60
+    while ! (cd "$DOCKER_DIR" && docker compose exec -T postgres \
+            pg_isready -U "$POSTGRES_USER") 2>/dev/null; do
+        retries=$((retries - 1))
+        if [ $retries -le 0 ]; then
+            print_error "Postgres did not become ready. Old data preserved at: ${archive_dir}"
+            exit 1
+        fi
+        sleep 1
+    done
+
+    # --- Step 7: Restore from the most recent backup (still mounted at backup/ in the new container) ---
+    local backup_dir="/var/lib/postgresql/data/backup"
+    local most_recent
+    most_recent=$(cd "$DOCKER_DIR" && docker compose exec -T postgres \
+        bash -c "ls -t ${backup_dir}/*.sql 2>/dev/null | head -1" 2>/dev/null) || true
+    most_recent=$(echo "$most_recent" | tr -d '[:space:]')
+
+    print_info "Restoring data from $(basename "${most_recent}")..."
+    (cd "$DOCKER_DIR" && docker compose exec --user postgres -T postgres \
+        psql -f "${most_recent}" postgres)
+
+    print_success "Database upgraded and restored from $(basename "${most_recent}")"
+    print_info   "Old data directory preserved at: ${archive_dir}"
+    print_info   "Once the upgrade is verified, remove it with: rm -rf '${archive_dir}'"
+
+    # --- Step 8: Start all services ---
+    print_info "Starting all services..."
+    (cd "$DOCKER_DIR" && docker compose up -d)
+
+    print_success "Upgrade complete: postgres ${current_major} → ${target_major}. All services are running."
+}
+
+_build() {
+    # Build the docker containers. This is not often used except in development or when rebuilding
+    # after an upgrade. By default, 'docker compose up' will pull the latest images and only rebuild
+    # if there are changes to the Dockerfiles or build context, so manual builds are not usually necessary.
+    load_env
+
+    # We've include pythia, a machine learning microservice for generating annotations from images. 
+    # It requires a model file to be present in PYTHIA_MODEL_DIR with the name specified by PYTHIA_MODEL_NAME.
+    # If none is found, we'll fetch the FathomNet megalodon model from Hugging Face and save it to that location.
+    local model_path="${PYTHIA_MODEL_DIR}/${PYTHIA_MODEL_NAME}"
+    if [ ! -f "$model_path" ]; then
+        print_warning "ML model not found at ${model_path}"
+        print_info "Fetching model from Hugging Face..."
+        echo $PYTHIA_MODEL_DIR
+        mkdir -p "$PYTHIA_MODEL_DIR"
+        curl -L --progress-bar \
+            "https://huggingface.co/spaces/FathomNet/megalodon/resolve/main/best.pt" \
+            -o "$model_path"
+        print_success "Model saved to ${model_path}"
+    else
+        print_info "ML model found at ${model_path}"
+    fi
+
     echo "Building service using docker compose..."
     _docker build "$@"
 }
 
 _configure() {
+    # Configure environment variables for the specified target. This creates the env file that 
+    # is used for docker compose and other commands.
 
     local target="$1"
 
@@ -136,6 +331,8 @@ _configure() {
 }
 
 _docker() {
+    # Run docker compose commands in the docker directory, ensuring the environment is loaded first.
+
     load_env   
     if [ ! -d "$DOCKER_DIR" ]; then
         print_error "Docker directory not found at '$DOCKER_DIR'." >&2
@@ -150,6 +347,7 @@ _docker() {
 }
 
 _env() {
+    # Show the contents of the env file for the current target. This is useful for debugging and verification.
     echo "--- Contents of $ENV_FILE ---"
     if [ -f "$ENV_FILE" ]; then
         cat "$ENV_FILE"
@@ -162,6 +360,11 @@ _env() {
 
 
 _mkcert() {
+    # Generate self-signed SSL certificate and key for localhost testing. This is used by the 
+    # Nginx container to serve the VARS/M3 microservices over HTTPS. The certificate will be 
+    # generated for "localhost" and "*.localhost". If mkcert is installed, it will be used to 
+    # generate a local CA and trusted certificate. Make sure to run `mkcert --install`.
+
     load_env
 
     local cert_path="${BASE_DIR}/temp/ssl/server.crt"
@@ -199,6 +402,8 @@ _mkcert() {
 }
 
 _resolved() {
+    # Show resolved environment variables with their evaluated values. This is useful for debugging 
+    # and verification. 
     load_env
     print_info "Resolved environment variables from $ENV_FILE"
     echo "# ------------------------------------------------------"
@@ -214,6 +419,12 @@ _resolved() {
 }
 
 _run() {
+    # Run a python or scala script from the etc/python or etc/scala directories, respectively. 
+    # The script should be passed as the first argument, and any additional arguments will be 
+    # forwarded to the script. This is useful for running ad-hoc scripts that interact with the 
+    # VARS/M3 services or databases, without needing to enter a container or set up a separate 
+    # environment. The environment variables will be loaded before running the script, so they 
+    # can be used for configuration.
     load_env
 
     local script_name=$(basename -- "$1")
@@ -234,6 +445,7 @@ _run() {
 }
 
 _scripts() {
+    # List available python and scala scripts in the etc/python and etc/scala directories, respectively.
     local python_dir="$BASE_DIR/etc/python"
     local scala_dir="$BASE_DIR/etc/scala"
     local found=0
@@ -277,6 +489,9 @@ _scripts() {
 }
 
 _start() {
+    # Start the docker containers using docker compose. This will start all services defined in 
+    # the compose.yml file. The environment variables will be loaded before starting, so they 
+    # can be used for configuration.
     load_env
     print_info "Starting service using docker compose..."
     print_info "    Using environment file at $ENV_FILE"
@@ -290,19 +505,23 @@ _start() {
 }
 
 _stop() {
+    # Stop the docker containers using docker compose. 
     load_env
     print_info "Stopping service using docker compose..."
     _docker down "$@"
 }
 
 _status() {
+    # Show the status of the docker containers using docker compose. This is a wrapper around 
+    #'docker compose ps' that ensures the environment is loaded first.
     load_env
     print_info "Checking status..."
     _docker ps "$@"
 }
 
 _targets() {
-        print_info "Available environment targets:"
+    # List available environment targets
+    print_info "Available environment targets:"
     echo ""
     for f in "${ETC_ENV_DIR}"/*.env; do
         if [[ -f "$f" ]]; then
@@ -315,6 +534,7 @@ _targets() {
 }
 
 _update() {
+    # Update the docker images for all services. This is a wrapper around 'docker compose pull'.
     print_info "Updating docker images..."
     # The original script just echoed, but this actually runs the pulls
     docker pull mbari/annosaurus
@@ -322,6 +542,7 @@ _update() {
     docker pull mbari/charybdis
     docker pull mbari/oni
     docker pull mbari/panoptes
+    docker pull mbari/pythia-python
     docker pull mbari/raziel
     docker pull mbari/skimmer
     docker pull mbari/vampire-squid
@@ -342,6 +563,9 @@ shift
 
 # Case statement to handle subcommands
 case "$SUBCOMMAND" in
+    backup)
+        _backup "$@"
+        ;;
     build)
         _build "$@"
         ;;
@@ -359,6 +583,9 @@ case "$SUBCOMMAND" in
         ;;
     resolved)
         _resolved "$@"
+        ;;
+    restore)
+        _restore "$@"
         ;;
     run)
         _run "$@"
@@ -380,6 +607,9 @@ case "$SUBCOMMAND" in
         ;;
     update)
         _update "$@"
+        ;;
+    upgrade)
+        _upgrade "$@"
         ;;
     *)
         echo "Error: Unknown subcommand '$SUBCOMMAND'" >&2

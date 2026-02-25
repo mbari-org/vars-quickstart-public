@@ -73,6 +73,9 @@ export PANOPTES_PUBLIC_URL="${M3_SERVER_URL}${PANOPTES_HTTP_CONTEXT_PATH}/v1"
 export PANOPTES_ROOT_DIRECTORY=/framegrabs
 export PANOPTES_ROOT_URL="${M3_SERVER_URL}/framegrabs"
 
+# -- Pythia Environment Variables --
+export PYTHIA_PUBLIC_PORT=8087
+
 # -- Raziel Environment Variables --
 export RAZIEL_ANNOSAURUS_TIMEOUT="60 seconds"
 export RAZIEL_BEHOLDER_TIMEOUT="10 seconds"
