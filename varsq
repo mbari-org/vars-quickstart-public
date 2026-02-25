@@ -56,12 +56,14 @@ VARS Quickstart (varsq) - Docker orchestration for VARS services and databases
 Usage: $SCRIPT_NAME <target> <subcommand> [options]
 
 Commands:
+    backup    Backup the postgres database (timestamped pg_dumpall inside container)
     build     Build the docker containers
     configure Set environment variables for the target
     docker    Run docker compose commands (pass through)
     env       Show environment variables for the target
     mkcert    Generate self-signed SSL certificate and key
     resolved  Show resolved environment variables (evaluated values)
+    restore   Restore the postgres database from the most recent backup
     run       Run a python or scala script
     scripts   List available python and scala scripts
     start     Start the docker containers
@@ -92,6 +94,73 @@ load_env() {
     set +a
 }
 
+
+_backup() {
+    load_env
+
+    local backup_dir="/var/lib/postgresql/data/backup"
+    local timestamp
+    timestamp=$(date +%Y%m%dT%H%M%SZ)
+    local backup_file="${backup_dir}/backup_${timestamp}.sql"
+
+    print_info "Creating backup directory inside postgres container..."
+    (cd "$DOCKER_DIR" && docker compose exec postgres mkdir -p "$backup_dir")
+
+    print_info "Dumping all databases to ${backup_file}..."
+    (cd "$DOCKER_DIR" && docker compose exec -T -e PGPASSWORD="$POSTGRES_PWD" postgres \
+        bash -c "pg_dumpall -U '${POSTGRES_USER}' --clean --if-exists > '${backup_file}'")
+
+    print_success "Backup complete: ${backup_file}"
+}
+
+_restore() {
+    load_env
+
+    local backup_dir="/var/lib/postgresql/data/backup"
+
+    print_info "Searching for most recent backup in ${backup_dir}..."
+    local most_recent
+    most_recent=$(cd "$DOCKER_DIR" && docker compose exec -T postgres \
+        bash -c "ls -t ${backup_dir}/*.sql 2>/dev/null | head -1" 2>/dev/null) || true
+    most_recent=$(echo "$most_recent" | tr -d '[:space:]')
+
+    if [ -z "$most_recent" ]; then
+        print_error "No backup files found in ${backup_dir}. Run '$(basename "$0") backup' first."
+        exit 1
+    fi
+
+    print_info "Most recent backup: ${most_recent}"
+    print_info "Creating safety backup of current state before restore..."
+    _backup
+
+    print_info "Stopping all services for restore..."
+    (cd "$DOCKER_DIR" && docker compose down)
+
+    print_info "Starting postgres for restore..."
+    (cd "$DOCKER_DIR" && docker compose up -d postgres)
+
+    print_info "Waiting for postgres to be ready..."
+    local retries=30
+    while ! (cd "$DOCKER_DIR" && docker compose exec -T postgres pg_isready -U "$POSTGRES_USER") 2>/dev/null; do
+        retries=$((retries - 1))
+        if [ $retries -le 0 ]; then
+            print_error "Postgres did not become ready in time. Aborting restore."
+            exit 1
+        fi
+        sleep 1
+    done
+
+    print_info "Restoring from ${most_recent}..."
+    (cd "$DOCKER_DIR" && docker compose exec -T -e PGPASSWORD="$POSTGRES_PWD" postgres \
+        bash -c "psql -U '${POSTGRES_USER}' -f '${most_recent}' postgres")
+
+    print_success "Database restored from $(basename "${most_recent}")"
+
+    print_info "Restarting all services..."
+    (cd "$DOCKER_DIR" && docker compose up -d)
+
+    print_success "Restore complete. All services are running."
+}
 
 _build() {
     load_env
@@ -342,6 +411,9 @@ shift
 
 # Case statement to handle subcommands
 case "$SUBCOMMAND" in
+    backup)
+        _backup "$@"
+        ;;
     build)
         _build "$@"
         ;;
@@ -359,6 +431,9 @@ case "$SUBCOMMAND" in
         ;;
     resolved)
         _resolved "$@"
+        ;;
+    restore)
+        _restore "$@"
         ;;
     run)
         _run "$@"
