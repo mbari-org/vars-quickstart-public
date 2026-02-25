@@ -71,6 +71,7 @@ Commands:
     status    Show the status of the docker containers
     targets   List available targets enviroments
     update    Update the docker images
+    upgrade   Upgrade postgres to the major version pinned in docker/compose.yml
 
 Examples:
     $(basename "$0") targets
@@ -160,6 +161,105 @@ _restore() {
     (cd "$DOCKER_DIR" && docker compose up -d)
 
     print_success "Restore complete. All services are running."
+}
+
+_upgrade() {
+    load_env
+
+    # --- Detect current running major version ---
+    print_info "Checking current postgres version..."
+    local current_version_num
+    current_version_num=$(cd "$DOCKER_DIR" && docker compose exec -T postgres \
+        psql -U "$POSTGRES_USER" -t -c "SHOW server_version_num;" 2>/dev/null \
+        | tr -d '[:space:]') || true
+
+    if [ -z "$current_version_num" ]; then
+        print_error "Could not connect to running postgres. Is it running? Try: $(basename "$0") status"
+        exit 1
+    fi
+
+    local current_major=$(( current_version_num / 10000 ))
+
+    # --- Detect target major version from compose.yml image tag ---
+    local target_tag
+    target_tag=$(grep 'image: postgres:' "$DOCKER_DIR/compose.yml" \
+        | awk -F: '{print $NF}' | tr -d '[:space:]')
+    local target_major
+    target_major=$(echo "$target_tag" | cut -d. -f1)
+
+    print_info "Running postgres major version: ${current_major}"
+    print_info "Target  postgres major version: ${target_major}"
+
+    if [ "$target_major" -lt "$current_major" ]; then
+        print_error "Downgrading postgres (${current_major} → ${target_major}) is not supported."
+        print_info  "Update the image tag in docker/compose.yml to a newer major version."
+        exit 1
+    fi
+
+    if [ "$current_major" -eq "$target_major" ]; then
+        print_warning "Already on major version ${current_major}. No major upgrade needed."
+        print_info   "For a minor version update: $(basename "$0") docker pull postgres && $(basename "$0") docker restart postgres"
+        exit 0
+    fi
+
+    print_info "Major version upgrade: ${current_major} → ${target_major}"
+
+    # --- Step 1: Backup current state ---
+    print_info "Backing up current database before upgrade..."
+    _backup
+
+    # --- Step 2: Pull the new image ---
+    print_info "Pulling postgres:${target_tag}..."
+    (cd "$DOCKER_DIR" && docker compose pull postgres)
+
+    # --- Step 3: Stop all services ---
+    print_info "Stopping all services..."
+    (cd "$DOCKER_DIR" && docker compose down)
+
+    # --- Step 4: Archive old pgdata only (backup/ dir stays in place under POSTGRES_DIR) ---
+    local pgdata_dir="${POSTGRES_DIR}/pgdata"
+    local archive_name="pgdata_pre_upgrade_${current_major}_$(date +%Y%m%dT%H%M%SZ)"
+    local archive_dir="${POSTGRES_DIR}/${archive_name}"
+    print_info "Archiving old data directory to ${archive_name}..."
+    mv "$pgdata_dir" "$archive_dir"
+
+    # --- Step 5: Start fresh postgres (triggers initdb on empty pgdata) ---
+    print_info "Starting fresh postgres ${target_major} instance..."
+    (cd "$DOCKER_DIR" && docker compose up -d postgres)
+
+    # --- Step 6: Wait for postgres to be ready ---
+    print_info "Waiting for postgres to be ready..."
+    local retries=60
+    while ! (cd "$DOCKER_DIR" && docker compose exec -T postgres \
+            pg_isready -U "$POSTGRES_USER") 2>/dev/null; do
+        retries=$((retries - 1))
+        if [ $retries -le 0 ]; then
+            print_error "Postgres did not become ready. Old data preserved at: ${archive_dir}"
+            exit 1
+        fi
+        sleep 1
+    done
+
+    # --- Step 7: Restore from the most recent backup (still mounted at backup/ in the new container) ---
+    local backup_dir="/var/lib/postgresql/data/backup"
+    local most_recent
+    most_recent=$(cd "$DOCKER_DIR" && docker compose exec -T postgres \
+        bash -c "ls -t ${backup_dir}/*.sql 2>/dev/null | head -1" 2>/dev/null) || true
+    most_recent=$(echo "$most_recent" | tr -d '[:space:]')
+
+    print_info "Restoring data from $(basename "${most_recent}")..."
+    (cd "$DOCKER_DIR" && docker compose exec -T -e PGPASSWORD="$POSTGRES_PWD" postgres \
+        bash -c "psql -U '${POSTGRES_USER}' -f '${most_recent}' postgres")
+
+    print_success "Database upgraded and restored from $(basename "${most_recent}")"
+    print_info   "Old data directory preserved at: ${archive_dir}"
+    print_info   "Once the upgrade is verified, remove it with: rm -rf '${archive_dir}'"
+
+    # --- Step 8: Start all services ---
+    print_info "Starting all services..."
+    (cd "$DOCKER_DIR" && docker compose up -d)
+
+    print_success "Upgrade complete: postgres ${current_major} → ${target_major}. All services are running."
 }
 
 _build() {
@@ -455,6 +555,9 @@ case "$SUBCOMMAND" in
         ;;
     update)
         _update "$@"
+        ;;
+    upgrade)
+        _upgrade "$@"
         ;;
     *)
         echo "Error: Unknown subcommand '$SUBCOMMAND'" >&2
