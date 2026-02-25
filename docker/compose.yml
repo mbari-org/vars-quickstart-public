@@ -130,6 +130,7 @@ services:
       - m3
 
   postgres:
+    container_name: postgres
     image: postgres:16
     restart: always
     ports:
@@ -158,6 +159,18 @@ services:
     depends_on:
       - annosaurus
       - vampire-squid
+    networks:
+      - m3
+
+  pythia:
+    container_name: pythia
+    image: mbari/pythia-python
+    restart: always
+    ports:
+      - "${PYTHIA_PUBLIC_PORT}:8080"
+    volumes:
+      - ${PYTHIA_MODEL_DIR}:/opt/models
+    command: ["/opt/models/${PYTHIA_MODEL_NAME}"]
     networks:
       - m3
 

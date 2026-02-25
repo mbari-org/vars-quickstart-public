@@ -56,7 +56,7 @@ VARS Quickstart (varsq) - Docker orchestration for VARS services and databases
 Usage: $SCRIPT_NAME <target> <subcommand> [options]
 
 Commands:
-    backup    Backup the postgres database (timestamped pg_dumpall inside container)
+    backup    Backup the postgres database (timestamped pg_dumpall)
     build     Build the docker containers
     configure Set environment variables for the target
     docker    Run docker compose commands (pass through)
@@ -71,7 +71,7 @@ Commands:
     status    Show the status of the docker containers
     targets   List available targets enviroments
     update    Update the docker images
-    upgrade   Upgrade postgres to the major version pinned in docker/compose.yml
+    upgrade   Upgrade postgres to the major version pinned in docker/compose.yml (experimental)
 
 Examples:
     $(basename "$0") targets
@@ -105,11 +105,12 @@ _backup() {
     local backup_file="${backup_dir}/backup_${timestamp}.sql"
 
     print_info "Creating backup directory inside postgres container..."
-    (cd "$DOCKER_DIR" && docker compose exec postgres mkdir -p "$backup_dir")
+    (cd "$DOCKER_DIR" && docker compose exec --user postgres -T postgres \
+        bash -c "mkdir -p '${backup_dir}'")
 
     print_info "Dumping all databases to ${backup_file}..."
-    (cd "$DOCKER_DIR" && docker compose exec -T -e PGPASSWORD="$POSTGRES_PWD" postgres \
-        bash -c "pg_dumpall -U '${POSTGRES_USER}' --clean --if-exists > '${backup_file}'")
+    (cd "$DOCKER_DIR" && docker compose exec --user postgres -T postgres \
+        bash -c "pg_dumpall --clean --if-exists > '${backup_file}'")
 
     print_success "Backup complete: ${backup_file}"
 }
@@ -152,8 +153,8 @@ _restore() {
     done
 
     print_info "Restoring from ${most_recent}..."
-    (cd "$DOCKER_DIR" && docker compose exec -T -e PGPASSWORD="$POSTGRES_PWD" postgres \
-        bash -c "psql -U '${POSTGRES_USER}' -f '${most_recent}' postgres")
+    (cd "$DOCKER_DIR" && docker compose exec --user postgres -T postgres \
+        psql -f "${most_recent}" postgres)
 
     print_success "Database restored from $(basename "${most_recent}")"
 
@@ -166,19 +167,15 @@ _restore() {
 _upgrade() {
     load_env
 
-    # --- Detect current running major version ---
-    print_info "Checking current postgres version..."
-    local current_version_num
-    current_version_num=$(cd "$DOCKER_DIR" && docker compose exec -T postgres \
-        psql -U "$POSTGRES_USER" -t -c "SHOW server_version_num;" 2>/dev/null \
-        | tr -d '[:space:]') || true
-
-    if [ -z "$current_version_num" ]; then
-        print_error "Could not connect to running postgres. Is it running? Try: $(basename "$0") status"
+    # --- Detect current major version from the PG_VERSION file in pgdata ---
+    local pg_version_file="${POSTGRES_DIR}/pgdata/PG_VERSION"
+    if [ ! -f "$pg_version_file" ]; then
+        print_error "No postgres data directory found at ${POSTGRES_DIR}/pgdata"
+        print_info  "Has postgres been initialized? Try: $(basename "$0") start"
         exit 1
     fi
-
-    local current_major=$(( current_version_num / 10000 ))
+    local current_major
+    current_major=$(tr -d '[:space:]' < "$pg_version_file")
 
     # --- Detect target major version from compose.yml image tag ---
     local target_tag
@@ -248,8 +245,8 @@ _upgrade() {
     most_recent=$(echo "$most_recent" | tr -d '[:space:]')
 
     print_info "Restoring data from $(basename "${most_recent}")..."
-    (cd "$DOCKER_DIR" && docker compose exec -T -e PGPASSWORD="$POSTGRES_PWD" postgres \
-        bash -c "psql -U '${POSTGRES_USER}' -f '${most_recent}' postgres")
+    (cd "$DOCKER_DIR" && docker compose exec --user postgres -T postgres \
+        psql -f "${most_recent}" postgres)
 
     print_success "Database upgraded and restored from $(basename "${most_recent}")"
     print_info   "Old data directory preserved at: ${archive_dir}"
@@ -264,6 +261,21 @@ _upgrade() {
 
 _build() {
     load_env
+
+    local model_path="${PYTHIA_MODEL_DIR}/${PYTHIA_MODEL_NAME}"
+    if [ ! -f "$model_path" ]; then
+        print_warning "ML model not found at ${model_path}"
+        print_info "Fetching model from Hugging Face..."
+        echo $PYTHIA_MODEL_DIR
+        mkdir -p "$PYTHIA_MODEL_DIR"
+        curl -L --progress-bar \
+            "https://huggingface.co/spaces/FathomNet/megalodon/resolve/main/best.pt" \
+            -o "$model_path"
+        print_success "Model saved to ${model_path}"
+    else
+        print_info "ML model found at ${model_path}"
+    fi
+
     echo "Building service using docker compose..."
     _docker build "$@"
 }
