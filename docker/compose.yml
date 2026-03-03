@@ -75,6 +75,7 @@ services:
       - ${MEDIA_DIR}:/usr/local/nginx/media:ro
       - ${SSL_CERT_FILE}:/usr/local/nginx/private/cert/server.crt:ro
       - ${SSL_KEY_FILE}:/usr/local/nginx/private/cert/server.key:ro
+      - ${M3_TEMP_DIR}/ssl/acme-challenge:/usr/local/nginx/html/acme-challenge:ro
     networks:
       - m3
     depends_on:

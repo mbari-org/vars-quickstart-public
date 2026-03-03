@@ -56,27 +56,32 @@ VARS Quickstart (varsq) - Docker orchestration for VARS services and databases
 Usage: $SCRIPT_NAME <target> <subcommand> [options]
 
 Commands:
-    backup    Backup the postgres database (timestamped pg_dumpall)
-    build     Build the docker containers
-    configure Set environment variables for the target
-    docker    Run docker compose commands (pass through)
-    env       Show environment variables for the target
-    mkcert    Generate self-signed SSL certificate and key
-    resolved  Show resolved environment variables (evaluated values)
-    restore   Restore the postgres database from the most recent backup
-    run       Run a python or scala script
-    scripts   List available python and scala scripts
-    start     Start the docker containers
-    stop      Stop the docker containers
-    status    Show the status of the docker containers
-    targets   List available targets enviroments
-    update    Update the docker images
-    upgrade   Upgrade postgres to the major version pinned in docker/compose.yml (experimental)
+    backup      Backup the postgres database (timestamped pg_dumpall)
+    build       Build the docker containers
+    configure   Set environment variables for the target
+    docker      Run docker compose commands (pass through)
+    env         Show environment variables for the target
+    exportca    Export the CA certificate for distribution to client machines
+    letsencrypt Obtain a trusted SSL certificate from Let's Encrypt (requires public FQDN + port 80)
+    mkcert      Generate a self-signed SSL certificate (for LAN/localhost deployments)
+    renewcert   Renew a Let's Encrypt certificate
+    resolved    Show resolved environment variables (evaluated values)
+    restore     Restore the postgres database from the most recent backup
+    run         Run a python or scala script
+    scripts     List available python and scala scripts
+    start       Start the docker containers
+    stop        Stop the docker containers
+    status      Show the status of the docker containers
+    targets     List available target environments
+    update      Update the docker images
+    upgrade     Upgrade postgres to the major version pinned in docker/compose.yml (experimental)
 
 Examples:
     $(basename "$0") targets
     $(basename "$0") configure localhost
-    $(basename "$0") mkcert
+    $(basename "$0") letsencrypt --email admin@example.com   # if server has a public FQDN
+    $(basename "$0") mkcert                                  # for LAN/localhost deployments
+    $(basename "$0") exportca                                # distribute CA cert to clients
     $(basename "$0") start
     $(basename "$0") docker ps
 
@@ -376,7 +381,11 @@ _mkcert() {
         print_info "mkcert found. Generating local CA and self-signed certificate..."
         # mkcert -install
         mkcert -cert-file "$cert_path" -key-file "$key_path" "localhost" "*.localhost" "127.0.0.1" "::1" "$VARS_WEB_SERVER"
-        
+        print_info ""
+        print_warning "The mkcert CA is only trusted on THIS machine."
+        print_warning "Researchers connecting from other machines (browsers or JavaFX apps) will see"
+        print_warning "SSL certificate errors until the CA is installed on their machines."
+        print_info "Run '$(basename "$0") exportca' to get the CA cert and per-platform install instructions."
         return
     fi
     # Fallback to openssl if mkcert is not available
@@ -399,6 +408,284 @@ _mkcert() {
         -addext "subjectAltName=DNS:localhost,DNS:*.local,${san_entry},IP:127.0.0.1"
 
     print_success "Self-signed SSL certificate and key generated successfully."
+    print_info ""
+    print_warning "This is a self-signed certificate. Researchers connecting from other machines"
+    print_warning "(browsers or JavaFX apps) will see SSL errors until the CA is installed on their machines."
+    print_info "Run '$(basename "$0") exportca' to get the CA cert and per-platform install instructions."
+}
+
+_letsencrypt() {
+    # Obtain a trusted SSL certificate from Let's Encrypt using the HTTP-01 challenge via certbot.
+    # Requirements:
+    #   - VARS_WEB_SERVER must be a real, publicly-resolvable domain name (not an IP address).
+    #   - Port 80 must be reachable from the internet at that domain.
+    #   - Docker must be running (certbot runs in a Docker container; no local install needed).
+    # On success, temp/ssl/server.crt and server.key are replaced with the Let's Encrypt certificate.
+    # Let's Encrypt certificates are trusted by all browsers, operating systems, and Java apps
+    # (including jpackage'd JavaFX apps) without any additional client-side configuration.
+
+    load_env
+
+    local email=""
+    local domain="${VARS_WEB_SERVER}"
+
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --email)   email="$2";  shift 2 ;;
+            --domain)  domain="$2"; shift 2 ;;
+            *)
+                print_error "Unknown argument: $1"
+                echo "Usage: $SCRIPT_NAME letsencrypt --email admin@example.com [--domain hostname]"
+                exit 1
+                ;;
+        esac
+    done
+
+    if [[ -z "$email" ]]; then
+        print_error "Email is required."
+        echo "Usage: $SCRIPT_NAME letsencrypt --email admin@example.com [--domain hostname]"
+        exit 1
+    fi
+
+    if [[ -z "$domain" ]]; then
+        print_error "Domain is required. Set VARS_WEB_SERVER in your env file or pass --domain <hostname>."
+        exit 1
+    fi
+
+    # Let's Encrypt cannot validate IP addresses — it requires a real domain name.
+    if [[ "$domain" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]] || [[ "$domain" =~ : ]]; then
+        print_error "Let's Encrypt requires a real domain name, not an IP address ($domain)."
+        print_info  "For LAN/localhost deployments, use: $(basename "$0") mkcert"
+        print_info  "Then run: $(basename "$0") exportca  (to distribute the CA cert to client machines)"
+        exit 1
+    fi
+
+    local acme_webroot="${M3_TEMP_DIR}/ssl/acme-challenge"
+    local letsencrypt_dir="${M3_TEMP_DIR}/ssl/letsencrypt"
+    mkdir -p "$acme_webroot" "$letsencrypt_dir"
+
+    print_info "Requesting Let's Encrypt certificate for: $domain"
+    print_info "Contact email: $email"
+    print_info ""
+    print_info "Requirements:"
+    print_info "  - DNS for '$domain' must point to this server's public IP"
+    print_info "  - Port 80 must be reachable from the internet (firewall/NAT configured)"
+    print_info ""
+
+    # Nginx must be running to serve the ACME challenge files over HTTP.
+    print_info "Ensuring nginx is running for the HTTP challenge..."
+    if ! (cd "$DOCKER_DIR" && docker compose ps nginx 2>/dev/null | grep -qE "running|Up"); then
+        print_info "Starting nginx..."
+        (cd "$DOCKER_DIR" && docker compose up -d nginx)
+        sleep 3
+    fi
+
+    print_info "Running certbot (via Docker — no local certbot install needed)..."
+    docker run --rm \
+        -v "${acme_webroot}:/var/www/acme-challenge" \
+        -v "${letsencrypt_dir}:/etc/letsencrypt" \
+        certbot/certbot certonly \
+        --webroot \
+        --webroot-path /var/www/acme-challenge \
+        --email "$email" \
+        --agree-tos \
+        --no-eff-email \
+        --non-interactive \
+        -d "$domain"
+
+    local live_dir="${letsencrypt_dir}/live/${domain}"
+    if [[ ! -f "${live_dir}/fullchain.pem" ]]; then
+        print_error "Certificate files not found at ${live_dir}. Certbot may have failed."
+        print_info  "Common causes:"
+        print_info  "  - DNS for '$domain' does not point to this server"
+        print_info  "  - Port 80 is blocked by a firewall or NAT"
+        print_info  "  - Let's Encrypt rate limit reached (max 5 certs per domain per week)"
+        exit 1
+    fi
+
+    # Certbot runs as root inside Docker; on Linux the output files may be root-owned.
+    # Try a plain copy first; fall back to sudo if needed.
+    if ! cp "${live_dir}/fullchain.pem" "$SSL_CERT_FILE" 2>/dev/null; then
+        print_info "Certificate files are root-owned (normal on Linux). Using sudo to copy..."
+        sudo cp "${live_dir}/fullchain.pem" "$SSL_CERT_FILE"
+        sudo cp "${live_dir}/privkey.pem"   "$SSL_KEY_FILE"
+        sudo chown "$USER" "$SSL_CERT_FILE" "$SSL_KEY_FILE"
+    else
+        cp "${live_dir}/privkey.pem" "$SSL_KEY_FILE"
+    fi
+
+    print_success "Let's Encrypt certificate installed!"
+    print_info    "  Certificate : $SSL_CERT_FILE"
+    print_info    "  Private key : $SSL_KEY_FILE"
+    print_info ""
+    print_success "This certificate is trusted by all browsers, Java apps, and operating systems."
+    print_success "Researchers connecting from any machine need no extra setup."
+    print_info ""
+    print_info "Certificate expires in 90 days. To renew:"
+    print_info "  $(basename "$0") renewcert"
+    print_info ""
+    print_info "To apply the certificate immediately:"
+    print_info "  $(basename "$0") docker restart nginx"
+}
+
+_renewcert() {
+    # Renew a Let's Encrypt certificate previously obtained via 'varsq letsencrypt'.
+    # Certbot only contacts Let's Encrypt if the certificate is within 30 days of expiry,
+    # so it is safe to run this on a cron schedule (e.g. weekly).
+
+    load_env
+
+    local domain="${VARS_WEB_SERVER}"
+    local acme_webroot="${M3_TEMP_DIR}/ssl/acme-challenge"
+    local letsencrypt_dir="${M3_TEMP_DIR}/ssl/letsencrypt"
+
+    if [[ ! -d "${letsencrypt_dir}/live" ]]; then
+        print_error "No Let's Encrypt certificates found in ${letsencrypt_dir}/live."
+        print_info  "Run '$(basename "$0") letsencrypt --email admin@example.com' first."
+        exit 1
+    fi
+
+    print_info "Renewing Let's Encrypt certificate for: $domain"
+    docker run --rm \
+        -v "${acme_webroot}:/var/www/acme-challenge" \
+        -v "${letsencrypt_dir}:/etc/letsencrypt" \
+        certbot/certbot renew \
+        --webroot \
+        --webroot-path /var/www/acme-challenge \
+        --non-interactive
+
+    local live_dir="${letsencrypt_dir}/live/${domain}"
+    if [[ -f "${live_dir}/fullchain.pem" ]]; then
+        if ! cp "${live_dir}/fullchain.pem" "$SSL_CERT_FILE" 2>/dev/null; then
+            sudo cp "${live_dir}/fullchain.pem" "$SSL_CERT_FILE"
+            sudo cp "${live_dir}/privkey.pem"   "$SSL_KEY_FILE"
+            sudo chown "$USER" "$SSL_CERT_FILE" "$SSL_KEY_FILE"
+        else
+            cp "${live_dir}/privkey.pem" "$SSL_KEY_FILE"
+        fi
+        print_success "Certificate renewed (or was already current)."
+        print_info    "To apply: $(basename "$0") docker restart nginx"
+    else
+        print_info "Certificate not renewed — it may not be due yet (certbot renews within 30 days of expiry)."
+    fi
+}
+
+_exportca() {
+    # Export the server CA certificate so it can be installed on researcher client machines.
+    #
+    # If the server uses a Let's Encrypt certificate, no distribution is needed — Let's Encrypt
+    # is trusted by all modern browsers, operating systems, and Java runtimes by default.
+    #
+    # If the server uses a mkcert or openssl self-signed certificate, this command exports the
+    # CA root cert to temp/ssl/vars-ca.crt and prints exact install instructions for:
+    #   - macOS (system keychain — covers browsers and Java)
+    #   - Windows (certutil — covers browsers and Java)
+    #   - Linux (system CA store — covers system apps; Java needs a separate keytool step)
+    #   - jpackage'd JavaFX apps on macOS, Windows, and Linux
+
+    load_env
+
+    local ssl_dir
+    ssl_dir="$(dirname "$SSL_CERT_FILE")"
+    local letsencrypt_dir="${M3_TEMP_DIR}/ssl/letsencrypt"
+    local ca_output="${ssl_dir}/vars-ca.crt"
+
+    # Let's Encrypt: nothing to distribute
+    if [[ -d "${letsencrypt_dir}/live" ]]; then
+        print_success "Your server uses a Let's Encrypt certificate."
+        print_success "Let's Encrypt is trusted by all modern browsers, operating systems, and Java apps."
+        print_info    "No CA certificate needs to be distributed to client machines."
+        return 0
+    fi
+
+    # mkcert: export the mkcert root CA
+    if command -v mkcert >/dev/null 2>&1; then
+        local mkcert_caroot
+        mkcert_caroot=$(mkcert -CAROOT 2>/dev/null)
+        local mkcert_ca="${mkcert_caroot}/rootCA.pem"
+        if [[ -f "$mkcert_ca" ]]; then
+            cp "$mkcert_ca" "$ca_output"
+            print_success "mkcert CA certificate exported to: $ca_output"
+        else
+            print_error "mkcert CA not found. Run 'mkcert -install' and then '$(basename "$0") mkcert'."
+            exit 1
+        fi
+    elif [[ -f "$SSL_CERT_FILE" ]]; then
+        # openssl self-signed fallback: the cert itself is its own CA
+        cp "$SSL_CERT_FILE" "$ca_output"
+        print_success "Self-signed certificate exported as CA to: $ca_output"
+    else
+        print_error "No certificate found. Run '$(basename "$0") mkcert' first."
+        exit 1
+    fi
+
+    local ca_filename
+    ca_filename=$(basename "$ca_output")
+
+    cat << EOF
+
+====================================================================
+  Distribute  ${ca_output}
+  to each client machine, then follow the instructions below.
+====================================================================
+
+  macOS — installs for all users and all apps (run in Terminal):
+
+    sudo security add-trusted-cert -d -r trustRoot \\
+      -k /Library/Keychains/System.keychain ${ca_filename}
+
+    (Browsers and Java apps pick this up automatically. No restart needed.)
+
+  Windows — run as Administrator in PowerShell or CMD:
+
+    certutil -addstore Root ${ca_filename}
+
+    (Browsers and Java apps pick this up automatically.)
+
+  Linux (Debian/Ubuntu):
+
+    sudo cp ${ca_filename} /usr/local/share/ca-certificates/vars-ca.crt
+    sudo update-ca-certificates
+
+  Linux (RHEL/Fedora/CentOS):
+
+    sudo cp ${ca_filename} /etc/pki/ca-trust/source/anchors/vars-ca.crt
+    sudo update-ca-trust
+
+  ----------------------------------------------------------------
+  JavaFX / jpackage apps — import into the app's embedded JDK.
+  (Required on all platforms; the system trust store is NOT used.)
+  ----------------------------------------------------------------
+
+  macOS — for each .app in /Applications (run in Terminal):
+
+    for cacerts in /Applications/*.app/Contents/runtime/Contents/Home/lib/security/cacerts; do
+      keytool -import -trustcacerts -noprompt -alias vars-ca \\
+        -file ${ca_filename} -keystore "\$cacerts" -storepass changeit
+    done
+
+  Windows — adjust path to match your install location (run as Administrator):
+
+    keytool -import -trustcacerts -noprompt -alias vars-ca ^
+      -file ${ca_filename} ^
+      -keystore "C:\Program Files\<AppName>\runtime\lib\security\cacerts" ^
+      -storepass changeit
+
+  Linux (jpackage .deb / .rpm — typical path):
+
+    keytool -import -trustcacerts -noprompt -alias vars-ca \\
+      -file ${ca_filename} \\
+      -keystore /opt/<appname>/lib/runtime/lib/security/cacerts \\
+      -storepass changeit
+
+  NOTE: 'keytool' ships with every JDK. On macOS it is at:
+    /Applications/<AppName>.app/Contents/runtime/Contents/Home/bin/keytool
+
+  TIP: If the server's domain name or IP address changes in future, generate
+  a new certificate ($(basename "$0") mkcert) and re-run $(basename "$0") exportca.
+  Then repeat the install steps on each client machine.
+
+EOF
 }
 
 _resolved() {
@@ -498,9 +785,15 @@ _start() {
     print_info "    Using temp dir at $M3_TEMP_DIR"
     print_info "    Ensuring SSL certificate and key exist at ${SSL_CERT_FILE} and ${SSL_KEY_FILE}..."
     if [ ! -f "${SSL_CERT_FILE}" ] || [ ! -f "${SSL_KEY_FILE}" ]; then
-        print_error "SSL certificate or key not found. Run 'varsq mkcert' to generate self-signed certificate and key for localhost testing."
+        print_error "SSL certificate or key not found."
+        print_info  "  If your server has a public FQDN:  $(basename "$0") letsencrypt --email admin@example.com"
+        print_info  "  For LAN/localhost deployments:     $(basename "$0") mkcert"
         exit 1
     fi
+
+    # Ensure the ACME challenge directory exists so Docker doesn't create it as root.
+    # This directory is used by 'varsq letsencrypt' for HTTP-01 domain validation.
+    mkdir -p "${M3_TEMP_DIR}/ssl/acme-challenge"
     _docker up -d "$@"
 }
 
@@ -578,8 +871,17 @@ case "$SUBCOMMAND" in
     env)
         _env "$@"
         ;;
+    exportca)
+        _exportca "$@"
+        ;;
+    letsencrypt)
+        _letsencrypt "$@"
+        ;;
     mkcert)
         _mkcert "$@"
+        ;;
+    renewcert)
+        _renewcert "$@"
         ;;
     resolved)
         _resolved "$@"
