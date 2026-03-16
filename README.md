@@ -64,6 +64,11 @@ VARS (Video Annotation and Reference System) is a comprehensive suite of microse
    ./varsq status
    ```
 
+7. **Update the database for the query application**
+   ```bash
+   ./varsq psql -f etc/sql/annotation_view.sql
+   ```
+
 ### Common Commands
 
 #### Environment Management
