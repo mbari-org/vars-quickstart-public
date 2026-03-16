@@ -1,3 +1,6 @@
+DROP VIEW IF EXISTS annotations;
+
+CREATE VIEW annotations AS
 SELECT im.uuid                                                                                                 AS imaged_moment_uuid,
        im.elapsed_time_millis                                                                                  AS index_elapsed_time_millis,
        im.recorded_timestamp                                                                                   AS index_recorded_timestamp,

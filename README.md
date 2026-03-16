@@ -45,7 +45,8 @@ VARS (Video Annotation and Reference System) is a comprehensive suite of microse
 
 3. **Configure your environment**
    ```bash
-   ./varsq configure etc/env/localhost.env
+   export VARS_HOSTNAME=$(hostname) # optional
+   ./varsq configure namedhost
    ```
 
 4. **Generate SSL certificates for local development**
@@ -72,7 +73,7 @@ VARS (Video Annotation and Reference System) is a comprehensive suite of microse
 ./varsq targets
 
 # Configure environment (merges source + core configuration)
-./varsq configure etc/env/localhost.env
+./varsq configure localhost
 
 # View merged environment file (with variable references)
 ./varsq env
