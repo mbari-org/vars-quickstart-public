@@ -70,4 +70,5 @@ FROM imaged_moments im
          LEFT JOIN video_references vr ON vr.uuid = im.video_reference_uuid
          LEFT JOIN videos v ON v.uuid = vr.video_uuid
          LEFT JOIN video_sequences vs ON vs.uuid = v.video_sequence_uuid
-         LEFT JOIN video_reference_information info ON info.video_reference_uuid = im.video_reference_uuid
+         LEFT JOIN video_reference_information info ON info.video_reference_uuid = im.video_reference_uuid;
+         
