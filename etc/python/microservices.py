@@ -586,7 +586,10 @@ class Annosaurus(JWTAuthtication):
         headers['Content-type'] = "application/json"
         url = "{}/ancillarydata/merge/{}".format(self.base_url, video_reference_uuid)
         body = json.dumps(rows)
-        return requests.put(url, headers=headers, data=body).json()
+        response = requests.put(url, headers=headers, data=body)
+        if not response.ok:
+            raise Exception(f"merge failed [{response.status_code}]: {response.text}")
+        return response.json() if response.content else None
 
     def update_recorded_timestamp(self, imaged_moment_uuid: str,
                recorded_timestamp: datetime,

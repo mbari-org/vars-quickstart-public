@@ -4,7 +4,7 @@ from microservices import VampireSquid, Annosaurus, Beholder
 import os
 import json
 import traceback
-import urllib
+import requests
 from pathlib import Path
 
 __author__ = "Brian Schlining"
@@ -69,12 +69,17 @@ def process_annotation(a: Dict, m: Dict, outputPath: Path, beholder: Beholder):
                 filepath = outputPath / filename
                 if not filepath.exists():
                     print(f"Downloading {url} to {filepath}")
-                    urllib.request.urlretrieve(url, filepath) 
+                    verify = os.environ.get("REQUESTS_CA_BUNDLE", False)
+                    response = requests.get(url, verify=verify, stream=True)
+                    response.raise_for_status()
+                    with open(filepath, 'wb') as f:
+                        for chunk in response.iter_content(chunk_size=8192):
+                            f.write(chunk)
             else:
                 # Grab image with beholder
                 media_url = m["uri"]
         
-                if media_url.startswith("http"):
+                if media_url.startswith("http") and 'elapsed_time_millis' in a:
                     filename = m['video_sequence_name'] + "--" + a['imaged_moment_uuid'] + ".jpg"
                     filename = filename.replace(" ", "_")
                     p = outputPath / filename

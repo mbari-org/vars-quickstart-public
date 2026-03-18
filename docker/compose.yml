@@ -164,6 +164,7 @@ services:
     container_name: postgres
     image: postgres:16
     restart: always
+    shm_size: 256m
     logging:
       driver: "local"
       options:
