@@ -18,7 +18,7 @@ def main(camera_id: str, deployment_id: str, url: str, extracttime: bool=False) 
         try: 
             vars_register_media.main(camera_id, deployment_id, uri, extracttime)
         except Exception as e:
-            print("An exception occured: {e}")
+            print(f"An exception occured: {e}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

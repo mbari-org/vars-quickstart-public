@@ -79,6 +79,7 @@ export PYTHIA_PUBLIC_PORT=8087
 # -- Raziel Environment Variables --
 export RAZIEL_ANNOSAURUS_TIMEOUT="60 seconds"
 export RAZIEL_BEHOLDER_TIMEOUT="10 seconds"
+export RAZIEL_DOCKER_URL="http://raziel:8080"
 export RAZIEL_HTTP_CONTEXT=config
 export RAZIEL_JWT_ISSUER="${VARS_JWT_ISSUER}"
 export RAZIEL_PUBLIC_PORT=8400

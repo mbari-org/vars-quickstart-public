@@ -65,6 +65,7 @@ Commands:
     letsencrypt Obtain a trusted SSL certificate from Let's Encrypt (requires public FQDN + port 80)
     mkcert      Generate a self-signed SSL certificate (for LAN/localhost deployments)
     renewcert   Renew a Let's Encrypt certificate
+    psql        Run psql in the postgres container (interactive or -c/-f)
     resolved    Show resolved environment variables (evaluated values)
     restore     Restore the postgres database from the most recent backup
     run         Run a python or scala script
@@ -688,6 +689,46 @@ _exportca() {
 EOF
 }
 
+_psql() {
+    # Open an interactive psql shell in the postgres container, or run a SQL command/file.
+    # Usage:
+    #   varsq psql                        # interactive shell
+    #   varsq psql -c "SELECT version();" # run a SQL string
+    #   varsq psql -f /path/to/file.sql   # run a SQL file (host path)
+    load_env
+
+    local db="${M3_DATABASE_NAME:-M3_VARS}"
+    local user="${POSTGRES_USER}"
+
+    if [[ $# -eq 0 ]]; then
+        # Interactive shell
+        (cd "$DOCKER_DIR" && docker compose exec -e PGPASSWORD="${POSTGRES_PWD}" postgres \
+            psql -U "$user" -d "$db")
+    elif [[ "$1" == "-c" ]]; then
+        # One-off SQL command
+        (cd "$DOCKER_DIR" && docker compose exec -e PGPASSWORD="${POSTGRES_PWD}" -T postgres \
+            psql -U "$user" -d "$db" -c "$2")
+    elif [[ "$1" == "-f" ]]; then
+        # SQL file — copy it into the container then run it
+        local host_file="$2"
+        if [[ ! -f "$host_file" ]]; then
+            print_error "File not found: $host_file"
+            exit 1
+        fi
+        local container_tmp="/tmp/varsq_$(basename "$host_file")"
+        local container_id
+        container_id=$(cd "$DOCKER_DIR" && docker compose ps -q postgres)
+        docker cp "$host_file" "${container_id}:${container_tmp}"
+        (cd "$DOCKER_DIR" && docker compose exec -e PGPASSWORD="${POSTGRES_PWD}" -T postgres \
+            psql -U "$user" -d "$db" -f "$container_tmp")
+        docker exec "$container_id" rm -f "$container_tmp"
+    else
+        print_error "Unknown argument: $1"
+        echo "Usage: $SCRIPT_NAME psql [-c <sql> | -f <file>]"
+        exit 1
+    fi
+}
+
 _resolved() {
     # Show resolved environment variables with their evaluated values. This is useful for debugging 
     # and verification. 
@@ -879,6 +920,9 @@ case "$SUBCOMMAND" in
         ;;
     mkcert)
         _mkcert "$@"
+        ;;
+    psql)
+        _psql "$@"
         ;;
     renewcert)
         _renewcert "$@"

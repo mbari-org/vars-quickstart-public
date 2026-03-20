@@ -7,6 +7,7 @@ import io
 import os
 import requests
 import subprocess
+import tempfile
 import urllib.request
 import ffprobe
 import timeutil
@@ -20,7 +21,14 @@ def media_type(uri: str) -> str:
 
 def fetch(uri: str) -> Path:
     """Fetch a file from a URI"""
-    return Path(urllib.request.urlretrieve(uri)[0])
+    verify = os.environ.get("REQUESTS_CA_BUNDLE", False)
+    response = requests.get(uri, verify=verify, stream=True)
+    response.raise_for_status()
+    suffix = Path(uri).suffix
+    with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as f:
+        for chunk in response.iter_content(chunk_size=1024 * 1024):
+            f.write(chunk)
+        return Path(f.name)
     
 def sha512(path: Path) -> str:
     """Calculate sha512"""
@@ -93,7 +101,7 @@ def main(camera_id: str, deployment_id: str, uri: str, extracttime: bool=False) 
             sha512=xs["sha512"],
             frame_rate=xs["frame_rate"])
 
-        print("{uri} has been registered")
+        print(f"{uri} has been registered")
         [print(key,':',value) for key, value in r.items()]
 
 
