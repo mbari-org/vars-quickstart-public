@@ -25,6 +25,7 @@ export M3_DATABASE_NAME="M3_VARS"
 export M3_DOCKER_JDBC_URL="jdbc:postgresql://postgres:5432/${M3_DATABASE_NAME}?sslmode=disable&stringType=unspecified"
 export M3_PUBLIC_JDBC_URL="jdbc:postgresql://${VARS_DATABASE_SERVER}:5432/${M3_DATABASE_NAME}?sslmode=disable&stringType=unspecified"
 export M3_SERVER_URL="https://${VARS_WEB_SERVER}"
+export M3_SERVER_URL_HTTP="http://${VARS_WEB_SERVER}"
 
 # -- Annosaurus Environment Variables --
 export ANNOSAURUS_DATABASE_PASSWORD="${POSTGRES_PWD}"
@@ -37,6 +38,7 @@ export ANNOSAURUS_MESSAGING_ZEROMQ_PORT=5563
 export ANNOSAURUS_MESSAGING_ZEROMQ_TOPIC=vars
 export ANNOSAURUS_PUBLIC_PORT=8082
 export ANNOSAURUS_PUBLIC_URL="${M3_SERVER_URL}/anno/v1"
+export ANNOSAURUS_PUBLIC_URL_HTTP="${M3_SERVER_URL_HTTP}:${ANNOSAURUS_PUBLIC_PORT}/v1"
 
 # -- Beholder Environment Variables --
 export BEHOLDER_CACHE_FREEPCT=0.20
@@ -44,6 +46,7 @@ export BEHOLDER_CACHE_SIZE=1000
 export BEHOLDER_DOCKER_URL="http://beholder:8080"
 export BEHOLDER_PUBLIC_PORT=8088
 export BEHOLDER_PUBLIC_URL="${M3_SERVER_URL}/capture"
+export BEHOLDER_PUBLIC_URL_HTTP="${M3_SERVER_URL_HTTP}:${BEHOLDER_PUBLIC_PORT}/capture"
 
 # -- Charybdis Environment Variables --
 export CHARYBDIS_ANNOTATION_SERVICE_PAGESIZE=1000
@@ -53,6 +56,7 @@ export CHARYBDIS_MEDIA_SERVICE_TIMEOUT="PT10S"
 # export CHARYBDIS_RAZIEL_SERVICE_URL="http://localhost:8086/config"
 export CHARYBDIS_PUBLIC_PORT=8086
 export CHARYBDIS_PUBLIC_URL="${M3_SERVER_URL}/references/v1"
+export CHARYBDIS_PUBLIC_URL_HTTP="${M3_SERVER_URL_HTTP}:${CHARYBDIS_PUBLIC_PORT}/v1"
 
 # -- Oni Environment Variables --
 export ONI_DATABASE_PASSWORD=${POSTGRES_PWD}
@@ -61,6 +65,7 @@ export ONI_DATABASE_USER="${POSTGRES_USER}"
 export ONI_DOCKER_URL="http://oni:8080/v1"
 export ONI_PUBLIC_PORT=8083
 export ONI_PUBLIC_URL="${M3_SERVER_URL}/kb/v1"
+export ONI_PUBLIC_URL_HTTP="${M3_SERVER_URL_HTTP}:${ONI_PUBLIC_PORT}/v1"
 export ONI_URL="${M3_SERVER_URL}/kb/v1"
 
 # -- Panoptes Environment Variables --
@@ -70,6 +75,7 @@ export PANOPTES_FILE_ARCHIVER="org.mbari.m3.panoptes.services.OldStyleMbariDiskA
 export PANOPTES_MAX_SIZE_MB=50
 export PANOPTES_PUBLIC_PORT=8085
 export PANOPTES_PUBLIC_URL="${M3_SERVER_URL}${PANOPTES_HTTP_CONTEXT_PATH}/v1"
+export PANOPTES_PUBLIC_URL_HTTP="${M3_SERVER_URL_HTTP}:${PYTHIA_PUBLIC_PORT}${PANOPTES_HTTP_CONTEXT_PATH}/v1"
 export PANOPTES_ROOT_DIRECTORY=/framegrabs
 export PANOPTES_ROOT_URL="${M3_SERVER_URL}/framegrabs"
 
@@ -83,13 +89,16 @@ export RAZIEL_DOCKER_URL="http://raziel:8080"
 export RAZIEL_HTTP_CONTEXT=config
 export RAZIEL_JWT_ISSUER="${VARS_JWT_ISSUER}"
 export RAZIEL_PUBLIC_PORT=8400
+export RAZIEL_PUBLIC_PORT_HTTP=8401
 export RAZIEL_PUBLIC_URL="${M3_SERVER_URL}/config"
+export RAZIEL_PUBLIC_URL_HTTP="${M3_SERVER_URL_HTTP}:${RAZIEL_PUBLIC_PORT_HTTP}/config"
 
 # -- Skimmer Environment Variables --
 export SKIMMER_DOCKER_URL="http://skimmer:8080"
 export SKIMMER_IMAGE_CACHE_SIZE_MB=100
 export SKIMMER_PUBLIC_PORT=8089
 export SKIMMER_PUBLIC_URL="${M3_SERVER_URL}/skimmer"
+export SKIMMER_PUBLIC_URL_HTTP="${M3_SERVER_URL_HTTP}:${SKIMMER_PUBLIC_PORT}/skimmer"
 export SKIMMER_ROI_CACHE_SIZE_MB=500
 
 # -- VampireSquid Environment Variables --
@@ -99,6 +108,7 @@ export VAMPIRESQUID_DATABASE_USER="${POSTGRES_USER}"
 export VAMPIRESQUID_DOCKER_URL="http://vampire-squid:8080/v1"
 export VAMPIRESQUID_PUBLIC_PORT=8084
 export VAMPIRESQUID_PUBLIC_URL="${M3_SERVER_URL}/vam/v1"
+export VAMPIRESQUID_PUBLIC_URL_HTTP="${M3_SERVER_URL_HTTP}:${VAMPIRESQUID_PUBLIC_PORT}/v1"
 
 # -- Script Helpers --
 # Allow Python requests to use the SSL cert file
