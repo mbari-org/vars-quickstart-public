@@ -121,6 +121,19 @@ header {
     margin-bottom: 0.5rem;
 }
 
+.header-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+}
+
+.header-logo {
+    height: clamp(3.5rem, 9vw, 5.5rem);
+    width: auto;
+    flex-shrink: 0;
+    color: var(--text-bright);
+}
+
 .wordmark h1 {
     font-size: clamp(3.5rem, 9vw, 5.5rem);
     font-weight: 300;
