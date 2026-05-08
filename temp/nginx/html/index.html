@@ -6,123 +6,175 @@
   <title>M3 - MBARI Media Management</title>
   <meta name="author" content="">
   <meta name="description" content="">
-  <link rel="stylesheet" href="" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="resources/css/default.css" />
-  <!-- <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet"> -->
 </head>
 
 <body>
 
-  <section id="mainheader">
-    <img src="resources/images/logo-mbari-3b.png" alt="MBARI" />
+  <div class="ocean-bg"></div>
+  <div class="particles" id="particles"></div>
+
+  <div class="container">
+
     <header>
-      <h1>Welcome to the MBARI Media Managment (M3) Server</h1>
-      <details>This server is running <a href="https://www.nginx.com/">NGINX</a>. It is also acting as a proxy for the
-        REST services. The source code for the NGINX docker build is located at
-        <a
-          href="https://bitbucket.org/mbari/m3-deployspace/src/master/nginx/">https://bitbucket.org/mbari/m3-deployspace/src/master/nginx/</a>
-      </details>
+      <div class="wordmark">
+        <h1>M3</h1>
+        <span class="badge">MBARI</span>
+      </div>
+      <div class="tagline">Media Management Server</div>
+      <div class="divider"></div>
     </header>
-  </section>
 
-  <section id="quicklinks">
-    <a href="https://bitbucket.org/account/user/mbari/projects/M3">Bitbucket</a> |
-    <a href="https://github.com/mbari-org">GitHub</a> |
-  </section>
+    <nav class="quicklinks">
+      <a class="quick-link" href="https://bitbucket.org/account/user/mbari/projects/M3">Bitbucket</a>
+      <a class="quick-link" href="https://github.com/mbari-org">GitHub</a>
+    </nav>
 
-  <section>
-    <h2>Web Apps</h2>
-    <ul>
-      <li><a href="query">VARS Query</a></li>
-      <li><a href="kbeditor">VARS Knowledge-base Editor</a></li>
-    </ul>
-  </section>
+    <div class="top-grid">
 
-  <section>
-    <h2>Media Access</h2>
-    <ul>
-      <li><a href="media/">Browse videos</a></li>
-      <li><a href="framegrabs/">Browse framegrabs</a></li>
-    </ul>
-  </section>
+      <div class="card card--sm">
+        <div class="card-label">Annotations</div>
+        <div class="card-title">VARS Query</div>
+        <div class="card-desc">Query annotation data online.</div>
+        <div class="card-links">
+          <a class="card-link" href="query">Open</a>
+        </div>
+      </div>
 
-  <section>
-    <h2>System Status</h2>
-    <div>
-      <ul>
-        <li><a href="/" onclick="javascript:event.target.port=3000">Grafana Data Visualizations</a></li>
-        <li><a href="/" onclick="javascript:event.target.port=9090">Prometheus Dashboard</a></li>
-      </ul>
+      <div class="card card--sm">
+        <div class="card-label">Knowledge Base</div>
+        <div class="card-title">KB Editor</div>
+        <div class="card-desc">Edit the VARS knowledge base taxonomy.</div>
+        <div class="card-links">
+          <a class="card-link" href="kbeditor">Open</a>
+        </div>
+      </div>
+
+      <div class="card card--sm">
+        <div class="card-label">Media</div>
+        <div class="card-title">Archives</div>
+        <div class="card-desc">Browse video and image archives.</div>
+        <div class="card-links">
+          <a class="card-link" href="media/">Videos</a>
+          <a class="card-link" href="framegrabs/">Framegrabs</a>
+        </div>
+      </div>
+
+      <div class="card card--sm">
+        <div class="card-label">Monitoring</div>
+        <div class="card-title">System Status</div>
+        <div class="card-desc">Health dashboards and metrics.</div>
+        <div class="card-links">
+          <a class="card-link" href="/" onclick="javascript:event.target.port=3000">Grafana</a>
+          <a class="card-link" href="/" onclick="javascript:event.target.port=9090">Prometheus</a>
+        </div>
+      </div>
+
     </div>
-  </section>
 
+    <div class="section-divider">
+      <span class="section-label-text">M3 Services</span>
+      <div class="divider-rule"></div>
+    </div>
 
-  <section id="index">
-    <h2>M3 Services</h2>
-    <section class="info">
-      <h3><a href="https://github.com/mbari-org/raziel">Raziel</a></h3>
-        <div>Raziel provides service configuration information, such as microservice URLs and access credentials, to VARS Applications. If needed, use <a href="config">http://[this server name]/config</a> as the configuration URL in VARS Annotation and VARS Gridview.</div>
-        <ul>
-          <li><a href="/docs/" onclick="javascript:event.target.port=8400">Swagger docs</a></li>
-          <li><a href="config/health">Service Health</a></li>
-          <li><a href="config/health/status">Health of all M3 services</a></li>
-        </ul>
-      </li>
-    </section>
+    <div class="services-grid">
 
-    <section class="info">
-      <h3><a href="https://github.com/mbari-org/annosaurus">Annosaurus</a></h3>
-      <div>Annosaurus stores and retrieves annotation information. The default endpoint is <a href="anno">http://[this server name/anno</a></div>
-      <ul>
-        <li><a href="/docs/" onclick="javascript:event.target.port=8082">Swagger docs</a></li>
-        <li><a href="anno/v1/health">Service Health</a></li>
-        <li><a href="anno/v1/imagedmoments?limit=10">Find a few imaged moments</a></li>
-      </ul>
-    </section>
+      <div class="card">
+        <div class="card-label">Config</div>
+        <div class="card-title">Raziel</div>
+        <div class="card-desc">Service configuration for VARS applications — URLs and credentials. Use <a href="config">http://[this server name]/config</a> in VARS Annotation and VARS Gridview.</div>
+        <div class="card-links">
+          <a class="card-link" href="/docs/" onclick="javascript:event.target.port=8400">Swagger docs</a>
+          <a class="card-link" href="config/health">Service health</a>
+          <a class="card-link" href="config/health/status">All M3 services health</a>
+        </div>
+      </div>
 
-    <section class="info">
-      <h3><a href="https://github.com/mbari-org/vampiresquid">Vampire-squid</a></h3>
-      <div>Vampire-squid is a video asset manager that organizes videos by dive or deployment. The default endpoint is <a href="vam">http://[this server name]/vam</a></div>
-      <ul>
-        <li><a href="/docs/" onclick="javascript:event.target.port=8084">Swagger docs</a></li>
-        <li><a href="vam/v1/health">Service Health</a></li>
-        <li><a href="vam/v1/videosequences/names">Show all deployment IDs (aka video sequence names)</a></li>
-      </ul>
-    </section>
+      <div class="card">
+        <div class="card-label">Annotations</div>
+        <div class="card-title">Annosaurus</div>
+        <div class="card-desc">Stores and retrieves annotation information. Endpoint: <a href="anno">http://[this server name]/anno</a></div>
+        <div class="card-links">
+          <a class="card-link" href="/docs/" onclick="javascript:event.target.port=8082">Swagger docs</a>
+          <a class="card-link" href="anno/v1/health">Service health</a>
+          <a class="card-link" href="anno/v1/imagedmoments?limit=10">Sample moments</a>
+        </div>
+      </div>
 
-    <section class="info">
-      <h3><a href="https://github.com/mbari-org/oni">Oni</a></h3>
-      <div>Oni provides access to the taxonomy used by MBARI's annotation systems and also manages user accounts and user preferences.. The default endpoint is <a href="kb">http://[this server name]/oni</a></div>
-      <ul>
-        <li><a href="/docs/" onclick="javascript:event.target.port=8083">Swagger docs</a></li>
-        <li><a href="kb/v1/health">Service Health</a></li>
-        <li><a href="kb/v1/phylogeny/up/Nanomia">Show phylogeny branch down to the genus <i>Nanomia</i></li>
-          <li><a href="kb/v1/users">Show all users</a></li>
-      </ul>
-    </section>
+      <div class="card">
+        <div class="card-label">Video Assets</div>
+        <div class="card-title">Vampire Squid</div>
+        <div class="card-desc">Video asset manager organizing videos by dive or deployment. Endpoint: <a href="vam">http://[this server name]/vam</a></div>
+        <div class="card-links">
+          <a class="card-link" href="/docs/" onclick="javascript:event.target.port=8084">Swagger docs</a>
+          <a class="card-link" href="vam/v1/health">Service health</a>
+          <a class="card-link" href="vam/v1/videosequences/names">All deployment IDs</a>
+        </div>
+      </div>
 
-    <section class="info">
-      <h3><a href="https://github.com/mbari-org/panoptes">Panoptes</a></h3>
-      <div>Panoptes archives framegrabs from annotation applications</div>
-      <ul>
-        <li><a href="/docs/" onclick="javascript:event.target.port=8085">Swagger docs</a></li>
-        <li><a href="/panoptes/v1/health">Service Health</a></li>
-      </ul>
-    </section>
+      <div class="card">
+        <div class="card-label">Taxonomy</div>
+        <div class="card-title">Oni</div>
+        <div class="card-desc">Organism naming infrastructure — taxonomy, user accounts, and preferences. Endpoint: <a href="kb">http://[this server name]/oni</a></div>
+        <div class="card-links">
+          <a class="card-link" href="/docs/" onclick="javascript:event.target.port=8083">Swagger docs</a>
+          <a class="card-link" href="kb/v1/health">Service health</a>
+          <a class="card-link" href="kb/v1/phylogeny/up/Nanomia">Nanomia phylogeny</a>
+          <a class="card-link" href="kb/v1/users">All users</a>
+        </div>
+      </div>
 
-    <section class="info">
-      <h3><a href="https://github.com/mbari-org/beholder">Beholder</a></h3>
-      <div>Beholder extracts on-demand images from video. </div>
-      <ul>
-        <li><a href="/docs" onclick="javascript:event.target.port=8088">Swagger docs</a></li>
-        <li><a href="/capture/health">Service Health</a></li>
-      </ul>
-    </section>
+      <div class="card">
+        <div class="card-label">Framegrabs</div>
+        <div class="card-title">Panoptes</div>
+        <div class="card-desc">Archives framegrabs from annotation applications.</div>
+        <div class="card-links">
+          <a class="card-link" href="/docs/" onclick="javascript:event.target.port=8085">Swagger docs</a>
+          <a class="card-link" href="panoptes/v1/health">Service health</a>
+        </div>
+      </div>
 
+      <div class="card">
+        <div class="card-label">Imaging</div>
+        <div class="card-title">Beholder</div>
+        <div class="card-desc">Extracts on-demand images from video.</div>
+        <div class="card-links">
+          <a class="card-link" href="/docs" onclick="javascript:event.target.port=8088">Swagger docs</a>
+          <a class="card-link" href="/capture/health">Service health</a>
+        </div>
+      </div>
 
-  </section>
+    </div>
 
-  <script src=""></script>
+    <footer>
+      <a href="https://www.mbari.org" style="color: inherit; text-decoration: none;">Monterey Bay Aquarium Research Institute</a>
+    </footer>
+
+  </div>
+
+  <script>
+    const container = document.getElementById('particles');
+    for (let i = 0; i < 40; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      const size = Math.random() * 3 + 1;
+      p.style.cssText = [
+        `width:${size}px`,
+        `height:${size}px`,
+        `left:${Math.random() * 100}%`,
+        `top:${Math.random() * 100 + 100}%`,
+        `--max-opacity:${(Math.random() * 0.3 + 0.05).toFixed(3)}`,
+        `--drift:${((Math.random() - 0.5) * 80).toFixed(1)}px`,
+        `animation-duration:${(Math.random() * 15 + 10).toFixed(1)}s`,
+        `animation-delay:-${(Math.random() * 20).toFixed(1)}s`,
+      ].join(';');
+      container.appendChild(p);
+    }
+  </script>
+
 </body>
 
 </html>
