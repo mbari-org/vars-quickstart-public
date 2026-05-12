@@ -27,15 +27,15 @@ VARS (Video Annotation and Reference System) is a comprehensive suite of microse
 - Bash shell
 - Approximately 8GB of available RAM
 - Network access to pull Docker images from Docker Hub
-- SSL certificates (can be generated with the built-in `mkcert` command)
+- SSL certificates (can be generated with the built-in `mkcert` command for local use, contact your IT department about getting an official certificate)
 - Python for running support utilities (optional)
 
 ### Quick Start
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/mbari-org/vars-quickstart-mbari.git
-   cd vars-quickstart-mbari
+   git clone https://github.com/mbari-org/vars-quickstart-public.git
+   cd vars-quickstart-public
    ```
 
 2. **View available environment targets**
@@ -45,12 +45,28 @@ VARS (Video Annotation and Reference System) is a comprehensive suite of microse
 
 3. **Configure your environment**
    ```bash
+   # Easy
    export VARS_HOSTNAME=$(hostname) # optional
    ./varsq configure namedhost
+
+   # Alternative, create a full custom environment
+   cp etc/env/namedhost.env etc/env/myhost.env
+   # Edit etc/env/myhost.env as needed
    ```
 
-4. **Generate SSL certificates for local development**
+4. **Configure SSL certificates**
    ```bash
+   # If you have your own SSL certificates, you have two options
+   # Option 1 - Copy them to the expected location
+   cp mycert.crt temp/ssl/server.crt
+   cp mycert.key temp/ssl/server.key
+
+   # Option 2 - Edit your custom env file to point at the location of 
+   # your certificate. e.g:
+   # export SSL_CERT_FILE=/path/to/mycert.crt
+   # export SSL_KEY_FILE=/path/to/mycert.key
+
+   # Option 3 - Use a self-signed SSL key (only works on the host machine)
    ./varsq mkcert
    ```
 
@@ -263,7 +279,7 @@ Services communicate internally via Docker hostnames (e.g., `http://annosaurus:8
 ### Project Structure
 
 ```
-vars-quickstart-mbari/
+vars-quickstart-public/
 ├── varsq                    # Main orchestrator script
 ├── docker/
 │   ├── compose.yml         # Docker Compose service definitions
@@ -292,7 +308,7 @@ When `./varsq configure <source>` runs, it:
 
 In Bash, later `export` statements override earlier ones, so **variables in `core.env.sh` take precedence**. This ordering must not be changed.
 
-See varsq:79-84 for the implementation.
+See `_configure()` in varsq for the implementation.
 
 #### Required Environment Variables
 
@@ -330,7 +346,7 @@ To add a new service to the VARS stack:
        - m3
    ```
 
-3. **Update the `_update()` function** in varsq:211-223 to include image pulls
+3. **Update the `_update()` function** in varsq to include image pulls
    ```bash
    docker pull mbari/newservice
    ```
@@ -348,13 +364,13 @@ Follow the existing pattern of dual URL variables:
 
 1. **Create a new environment target**
    ```bash
-   cp etc/env/docker-dp.env etc/env/myenv.env
+   cp etc/env/namedhost.env etc/env/myenv.env
    # Edit myenv.env with your settings
    ```
 
 2. **Configure your environment**
    ```bash
-   ./varsq configure etc/env/myenv.env
+   ./varsq configure myenv
    ```
 
 3. **Verify resolved configuration**
@@ -375,11 +391,11 @@ Follow the existing pattern of dual URL variables:
 
 ### Working with the varsq Script
 
-The `varsq` script is the main entry point (varsq:1-277). Key implementation details:
+The `varsq` script is the main entry point. Key implementation details:
 
 - **Working directory**: All Docker Compose operations execute in the `docker/` directory
-- **Environment sourcing**: The merged `docker/env.sh` is sourced at startup (varsq:45-49)
-- **Pass-through commands**: The `docker` subcommand forwards all arguments to Docker Compose (varsq:94-105)
+- **Environment sourcing**: The merged `docker/env.sh` is sourced before service commands run
+- **Pass-through commands**: The `docker` subcommand forwards all arguments to Docker Compose via `_docker()`
 
 ### Environment File Conventions
 
