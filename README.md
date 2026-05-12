@@ -38,23 +38,7 @@ VARS (Video Annotation and Reference System) is a comprehensive suite of microse
    cd vars-quickstart-public
    ```
 
-2. **View available environment targets**
-   ```bash
-   ./varsq targets
-   ```
-
-3. **Configure your environment**
-   ```bash
-   # Easy
-   export VARS_HOSTNAME=$(hostname) # optional
-   ./varsq configure namedhost
-
-   # Alternative, create a full custom environment
-   cp etc/env/namedhost.env etc/env/myhost.env
-   # Edit etc/env/myhost.env as needed
-   ```
-
-4. **Configure SSL certificates**
+2. **Configure SSL certificates**
    ```bash
    # If you have your own SSL certificates, you have two options
    # Option 1 - Copy them to the expected location
@@ -68,6 +52,22 @@ VARS (Video Annotation and Reference System) is a comprehensive suite of microse
 
    # Option 3 - Use a self-signed SSL key (only works on the host machine)
    ./varsq mkcert
+   ```
+
+3. **View available environment targets**
+   ```bash
+   ./varsq targets
+   ```
+
+4. **Configure your environment**
+   ```bash
+   # Easy
+   export VARS_HOSTNAME=$(hostname) # optional
+   ./varsq configure namedhost
+
+   # Alternative, create a full custom environment
+   cp etc/env/namedhost.env etc/env/myhost.env
+   # Edit etc/env/myhost.env as needed
    ```
 
 5. **Start the services**
