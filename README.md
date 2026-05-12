@@ -61,13 +61,14 @@ VARS (Video Annotation and Reference System) is a comprehensive suite of microse
 
 4. **Configure your environment**
    ```bash
-   # Easy
+   # Easy method
    export VARS_HOSTNAME=$(hostname) # optional
    ./varsq configure namedhost
 
-   # Alternative, create a full custom environment
+   # Alternative method, create a full custom environment
    cp etc/env/namedhost.env etc/env/myhost.env
    # Edit etc/env/myhost.env as needed
+   ./varsq configure myhost
    ```
 
 5. **Start the services**
