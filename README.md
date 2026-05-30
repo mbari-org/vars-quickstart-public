@@ -128,6 +128,9 @@ VARS (Video Annotation and Reference System) is a comprehensive suite of microse
 
 # Update to latest service images
 ./varsq update
+
+# Upgrade the entire stack to the latest version (see Keeping Up to Date below)
+./varsq upgrade
 ```
 
 #### SSL Certificate Management
@@ -137,6 +140,27 @@ VARS (Video Annotation and Reference System) is a comprehensive suite of microse
 # Uses mkcert if available, falls back to openssl
 ./varsq mkcert
 ```
+
+#### Keeping Up to Date
+
+The `upgrade` command performs a full stack update in one step:
+
+```bash
+./varsq upgrade
+```
+
+This runs the following operations in order:
+
+1. `git pull` — pulls the latest changes to the quickstart scripts and configuration
+2. `varsq stop` — gracefully stops all running services
+3. `varsq update` — pulls the latest Docker images for all VARS microservices
+4. `varsq configure <target>` — re-applies your saved environment configuration
+5. `varsq build` — rebuilds containers if needed
+6. `varsq start` — starts all services with the updated images
+
+> [!NOTE]
+> `upgrade` requires that you have previously run `./varsq configure <target>` at least once.
+> The target is saved automatically to `temp/.config/.varsq.conf` and reused by `upgrade`.
 
 #### Advanced Docker Compose Operations
 
@@ -191,14 +215,15 @@ The repository includes Python utility scripts for common VARS operations. These
 The VARS stack includes the following microservices:
 
 - **annosaurus**: Annotation service for managing video annotations
-- **vampire-squid**: Video asset management service
+- **beholder**: Image cache service
+- **charybdis**: Query service for complex data retrieval
+- **nginx**: Reverse proxy with SSL termination
 - **oni**: Knowledge base service for taxonomic and descriptive data
 - **panoptes**: Image and framegrab management service
+- **pythia**: ML image inference service using ultralytics
 - **raziel**: API gateway and service aggregator
-- **charybdis**: Query service for complex data retrieval
-- **beholder**: Image cache service
 - **skimmer**: Image processing service
-- **nginx**: Reverse proxy with SSL termination
+- **vampire-squid**: Video asset management service
 
 All services are accessible through the configured `VARS_WEB_SERVER` hostname via HTTPS (default port 443) or HTTP (default port 80).
 

@@ -18,8 +18,11 @@ DOCKER_DIR="$BASE_DIR/docker"
 # Path to the etc/env directory
 ETC_ENV_DIR="$BASE_DIR/etc/env"
 
-# Path to the env file. 
+# Path to the env file.
 ENV_FILE="$DOCKER_DIR/env.sh"
+
+# Path to the persistent config file (stores last configured target)
+CONF_FILE="${BASE_DIR}/temp/.config/.varsq.conf"
 
 # Path to the core env file
 CORE_ENV_FILE="$BASE_DIR/etc/env/core.env.sh"
@@ -75,7 +78,8 @@ Commands:
     status      Show the status of the docker containers
     targets     List available target environments
     update      Update the docker images
-    upgrade     Upgrade postgres to the major version pinned in docker/compose.yml (experimental)
+    upgrade     Pull git changes, update images, reconfigure, rebuild, and restart (full stack upgrade)
+    upgrade_db  Upgrade postgres to the major version pinned in docker/compose.yml (experimental)
 
 Examples:
     $(basename "$0") targets
@@ -172,8 +176,8 @@ _restore() {
     print_success "Restore complete. All services are running."
 }
 
-_upgrade() {
-    # Experimental: Upgrade postgres to the major version pinned in docker/compose.yml. 
+_upgrade_db() {
+    # Experimental: Upgrade postgres to the major version pinned in docker/compose.yml.
     # This is a destructive operation that will create a new pgdata directory and restore 
     # from the most recent backup. The old pgdata directory will be archived with a timestamp
     # for safety, but should be removed once the upgrade is verified.
@@ -334,6 +338,10 @@ _configure() {
     cat "$CORE_ENV_FILE" >> "$ENV_FILE"
 
     print_success "Environment configured: $ENV_FILE"
+
+    mkdir -p "$(dirname "$CONF_FILE")"
+    echo "TARGET=$target" > "$CONF_FILE"
+    print_success "Target saved to $CONF_FILE"
 }
 
 _docker() {
@@ -867,6 +875,42 @@ _targets() {
     print_info "Configure with: $(basename "$0") configure <target>"
 }
 
+_upgrade() {
+    # Upgrade the entire VARS quickstart stack to the latest versions. This pulls the latest git
+    # changes, stops services, updates docker images, reconfigures the environment, rebuilds
+    # containers, and restarts everything. Requires a prior 'configure' run to have saved the target.
+
+    if [[ ! -f "$CONF_FILE" ]]; then
+        print_error "No saved target found. Run: $(basename "$0") configure <target> first."
+        exit 1
+    fi
+
+    local target
+    target=$(grep '^TARGET=' "$CONF_FILE" | cut -d= -f2-)
+
+    if [[ -z "$target" ]]; then
+        print_error "Could not read target from $CONF_FILE. Run: $(basename "$0") configure <target> first."
+        exit 1
+    fi
+
+    print_info "Upgrading VARS quickstart (target: $target)..."
+
+    print_info "Pulling latest git changes..."
+    git -C "$BASE_DIR" pull
+
+    _stop
+
+    _update
+
+    _configure "$target"
+
+    _build
+
+    _start
+
+    print_success "Upgrade complete."
+}
+
 _update() {
     # Update the docker images for all services. This is a wrapper around 'docker compose pull'.
     print_info "Updating docker images..."
@@ -956,6 +1000,9 @@ case "$SUBCOMMAND" in
         ;;
     upgrade)
         _upgrade "$@"
+        ;;
+    upgrade_db)
+        _upgrade_db "$@"
         ;;
     *)
         echo "Error: Unknown subcommand '$SUBCOMMAND'" >&2
