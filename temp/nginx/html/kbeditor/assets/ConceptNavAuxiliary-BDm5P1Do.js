@@ -1,0 +1,2 @@
+import{St as e,a as t}from"./KBTooltipTarget-CQ-NioVa.js";import{t as n}from"./config-CLUcd-6F.js";import{l as r}from"./realizations-SE_9lh-c.js";import{n as i}from"./ConceptSelect-Cz0_G8IO.js";var a=e(),o=({concepts:e,disabled:o=!1})=>(0,a.jsx)(i,{disabled:o,label:n.CONCEPT.SELECT.CONCEPT,components:[null,(0,a.jsx)(t,{sx:{width:`100%`,display:`flex`,justifyContent:`flex-end`},children:(0,a.jsx)(r,{history:e})},`nav-history-links`)]});export{o as t};
+//# sourceMappingURL=ConceptNavAuxiliary-BDm5P1Do.js.map

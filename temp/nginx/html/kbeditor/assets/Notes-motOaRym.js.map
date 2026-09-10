@@ -1,0 +1,1 @@
+{"version":3,"file":"Notes-motOaRym.js","names":[],"sources":["../../src/components/kb/panels/Notes.jsx"],"sourcesContent":["import EmptyPanel from '@/components/common/panel/EmptyPanel'\n\nconst Notes = () => {\n  return <EmptyPanel title='Notes' />\n}\n\nexport default Notes\n"],"mappings":"qGAEM,OACG,EAAA,EAAA,IAAA,CAAC,EAAD,CAAY,MAAM,OAAS,CAAA"}
