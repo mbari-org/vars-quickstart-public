@@ -290,7 +290,9 @@ _build() {
         print_info "Fetching model from Hugging Face..."
         echo $PYTHIA_MODEL_DIR
         mkdir -p "$PYTHIA_MODEL_DIR"
-        curl -L --progress-bar \
+        # Avoid SSL_CERT_FILE from load_env breaking OpenSSL curl CA verification.
+        env -u SSL_CERT_FILE -u REQUESTS_CA_BUNDLE -u CURL_CA_BUNDLE \
+            curl -L --progress-bar \
             "https://huggingface.co/spaces/FathomNet/megalodon/resolve/main/best.pt" \
             -o "$model_path"
         print_success "Model saved to ${model_path}"
