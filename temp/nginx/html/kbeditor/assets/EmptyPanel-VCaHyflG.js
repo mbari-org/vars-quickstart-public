@@ -1,0 +1,2 @@
+import{St as e,a as t}from"./KBTooltipTarget-CQ-NioVa.js";import{n,t as r}from"./usePanelFactory-ikI4uq64.js";var i=e(),a=({title:e})=>{let{createPanelHeader:a}=r(),o=a({headerTitle:(0,i.jsx)(n,{title:e})});return(0,i.jsx)(t,{children:o})};export{a as t};
+//# sourceMappingURL=EmptyPanel-VCaHyflG.js.map

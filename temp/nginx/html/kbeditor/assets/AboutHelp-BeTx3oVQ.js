@@ -1,0 +1,2 @@
+import{St as e,a as t}from"./KBTooltipTarget-CQ-NioVa.js";import{t as n}from"./config-CLUcd-6F.js";import{Gt as r,Wt as i}from"./index-B5lmxZFF.js";import{n as a,t as o}from"./usePanelFactory-ikI4uq64.js";var s=e(),c=n.PANELS.ABOUT_HELP.TITLE,l=()=>{let e=r(),n=i(),{createPanelHeader:l}=o(),u=l({headerTitle:(0,s.jsx)(a,{subtitle:`Version: ${e}`,subtitleTooltip:n,title:c})});return(0,s.jsx)(t,{children:u})};export{l as default};
+//# sourceMappingURL=AboutHelp-BeTx3oVQ.js.map

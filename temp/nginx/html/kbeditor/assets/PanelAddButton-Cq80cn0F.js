@@ -1,0 +1,2 @@
+import{St as e,t}from"./KBTooltipTarget-CQ-NioVa.js";import{xt as n}from"./constants-DtUXtF3Q.js";var r=e(),i=({onClick:e,disabled:i=!1,tooltip:a,label:o=`Add`})=>{let s=(0,r.jsx)(n,{color:`primary`,disabled:i,onClick:e,variant:`contained`,children:o});return a?(0,r.jsx)(t,{title:a,placement:`top`,wrapper:`span`,wrapperSx:{display:`inline-flex`},children:s}):s};export{i as t};
+//# sourceMappingURL=PanelAddButton-Cq80cn0F.js.map

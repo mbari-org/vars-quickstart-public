@@ -1,0 +1,1 @@
+{"version":3,"file":"Embargoes-C2nC60Gw.js","names":[],"sources":["../../src/components/kb/panels/Embargoes.jsx"],"sourcesContent":["import EmptyPanel from '@/components/common/panel/EmptyPanel'\n\nconst Embargoes = () => {\n  return <EmptyPanel title='Embargoes' />\n}\n\nexport default Embargoes\n"],"mappings":"qGAEM,OACG,EAAA,EAAA,IAAA,CAAC,EAAD,CAAY,MAAM,WAAa,CAAA"}

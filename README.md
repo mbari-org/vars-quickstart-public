@@ -12,6 +12,17 @@ Docker-based quickstart/orchestrator for MBARI's VARS (Video Annotation and Refe
 
 This repo is based off an internal project used for running the VARS microservices on a single server on MBARI's ships.
 
+## Documentation
+
+Detailed guides live in [`docs/`](docs/):
+
+| Guide | What it covers |
+|---|---|
+| [Authentication](docs/AUTHENTICATION.md) | How a client gets from a username and password to an authorized microservice call, and why each service has its own JWT signing secret |
+| [Real-time Annotation](docs/REALTIME.md) | Live framegrab annotation with a Blackmagic capture device |
+| [SSL with Let's Encrypt](docs/SSL-LETSENCRYPT.md) | Obtaining trusted certificates, including DNS-01 for intranet servers |
+| [ZeroMQ](docs/ZEROMQ.md) | Subscribing to annosaurus annotation messages |
+
 ## For Users
 
 ### What is VARS?
@@ -140,6 +151,8 @@ VARS (Video Annotation and Reference System) is a comprehensive suite of microse
 # Uses mkcert if available, falls back to openssl
 ./varsq mkcert
 ```
+
+For trusted certificates — including servers on an intranet that Let's Encrypt cannot reach — see [SSL with Let's Encrypt](docs/SSL-LETSENCRYPT.md).
 
 #### Keeping Up to Date
 
