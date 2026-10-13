@@ -77,7 +77,11 @@ export PANOPTES_PUBLIC_PORT=8085
 export PANOPTES_PUBLIC_URL="${M3_SERVER_URL}${PANOPTES_HTTP_CONTEXT_PATH}/v1"
 export PANOPTES_PUBLIC_URL_HTTP="${M3_SERVER_URL_HTTP}:${PANOPTES_PUBLIC_PORT}${PANOPTES_HTTP_CONTEXT_PATH}/v1"
 export PANOPTES_ROOT_DIRECTORY=/framegrabs
-export PANOPTES_ROOT_URL="${M3_SERVER_URL}/framegrabs"
+if [ "${SSL_ALLOW_HTTP}" = "true" ]; then
+    export PANOPTES_ROOT_URL="${M3_SERVER_URL_HTTP}/framegrabs"
+else
+    export PANOPTES_ROOT_URL="${M3_SERVER_URL}/framegrabs"
+fi
 
 # -- Pythia Environment Variables --
 export PYTHIA_PUBLIC_PORT=8087
