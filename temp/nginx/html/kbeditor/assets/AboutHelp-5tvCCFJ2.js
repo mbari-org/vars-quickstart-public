@@ -1,0 +1,2 @@
+import{Ct as e,o as t}from"./KBTooltipTarget-By7pG44f.js";import{t as n}from"./config-t30jVjEN.js";import{n as r,t as i}from"./useVersionTooltip-DU6UhRpu.js";import{n as a,t as o}from"./usePanelFactory-BZrGenEz.js";var s=e(),c=n.PANELS.ABOUT_HELP.TITLE,l=()=>{let e=r(),n=i(),{createPanelHeader:l}=o();return(0,s.jsx)(t,{children:l({headerTitle:(0,s.jsx)(a,{subtitle:`Version: ${e}`,subtitleTooltip:n,title:c})})})};export{l as default};
+//# sourceMappingURL=AboutHelp-5tvCCFJ2.js.map
