@@ -1,0 +1,2 @@
+import{Ct as e,o as t}from"./KBTooltipTarget-By7pG44f.js";import{t as n}from"./config-t30jVjEN.js";import{l as r}from"./realizations-DZmw7mP1.js";import{n as i}from"./ConceptSelect-C9A6Yw1s.js";var a=e(),o=({concepts:e})=>(0,a.jsx)(i,{label:n.CONCEPT.SELECT.CONCEPT,components:[null,(0,a.jsx)(t,{sx:{width:`100%`,display:`flex`,justifyContent:`flex-end`},children:(0,a.jsx)(r,{history:e})},`nav-history-links`)]});export{o as t};
+//# sourceMappingURL=ConceptNavAuxiliary-DXEoubXB.js.map

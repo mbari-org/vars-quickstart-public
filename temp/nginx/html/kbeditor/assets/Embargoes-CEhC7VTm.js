@@ -1,0 +1,2 @@
+import{Ct as e}from"./KBTooltipTarget-By7pG44f.js";import{t}from"./EmptyPanel-C1CsRq1z.js";var n=e(),r=()=>(0,n.jsx)(t,{title:`Embargoes`});export{r as default};
+//# sourceMappingURL=Embargoes-CEhC7VTm.js.map

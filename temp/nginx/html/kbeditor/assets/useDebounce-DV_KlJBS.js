@@ -1,0 +1,2 @@
+import{a as e}from"./rolldown-runtime-CNC7AqOf.js";import{zt as t}from"./KBTooltipTarget-By7pG44f.js";var n=e(t(),1),r=(e,t=333)=>{let r=(0,n.useRef)(null);return(0,n.useCallback)((...n)=>{r.current&&clearTimeout(r.current),r.current=setTimeout(()=>{e(...n)},t)},[e,t])};export{r as t};
+//# sourceMappingURL=useDebounce-DV_KlJBS.js.map

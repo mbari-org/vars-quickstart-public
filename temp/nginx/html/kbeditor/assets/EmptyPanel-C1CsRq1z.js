@@ -1,0 +1,2 @@
+import{Ct as e,o as t}from"./KBTooltipTarget-By7pG44f.js";import{n,t as r}from"./usePanelFactory-BZrGenEz.js";var i=e(),a=({title:e})=>{let{createPanelHeader:a}=r();return(0,i.jsx)(t,{children:a({headerTitle:(0,i.jsx)(n,{title:e})})})};export{a as t};
+//# sourceMappingURL=EmptyPanel-C1CsRq1z.js.map
