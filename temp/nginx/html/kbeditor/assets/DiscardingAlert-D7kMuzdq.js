@@ -1,0 +1,2 @@
+import{Ct as e}from"./KBTooltipTarget-By7pG44f.js";import{r as t}from"./constants-DT6wOKKo.js";import{t as n}from"./config-ChhsHyc_.js";var r=e(),i=n.PANELS.CONCEPTS.MODALS.STAGED,a=()=>(0,r.jsx)(t,{lines:i.WARNING,severity:`warning`});export{a as t};
+//# sourceMappingURL=DiscardingAlert-D7kMuzdq.js.map

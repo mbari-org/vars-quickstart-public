@@ -1,0 +1,2 @@
+import{n as e,t}from"./usePanelModal-D3YwlhOO.js";var{DataContext:n,OperationsContext:r,Provider:i,useDataContext:a,useOperationsContext:o}=e(`Panel`,(...e)=>t(...e));export{a as n,o as r,i as t};
+//# sourceMappingURL=modal--syvFvEI.js.map

@@ -1,0 +1,2 @@
+import{Ct as e,o as t,t as n}from"./KBTooltipTarget-By7pG44f.js";import{b as r,y as i}from"./csvExport-BXCTjA2N.js";var a=e(),o=({tooltip:e,placement:t=`top`,...i})=>(0,a.jsx)(n,{title:e,placement:t,children:(0,a.jsx)(r,{...i})}),s=({checked:e,disabled:n=!1,switchFn:r,switchLabel:s,switchTooltip:c=``})=>(0,a.jsx)(t,{children:(0,a.jsx)(o,{tooltip:c,control:(0,a.jsx)(i,{size:`small`,checked:e,disabled:n,onChange:r}),label:s})});export{o as n,s as t};
+//# sourceMappingURL=PanelDataSwitch-BZIXkXNo.js.map
