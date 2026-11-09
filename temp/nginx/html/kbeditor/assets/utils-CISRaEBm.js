@@ -1,0 +1,2 @@
+var e=(e,t={})=>{if(!e)return[];let{concepts:n,toConcept:r,linkName:i,linkValue:a}=t,o=i?.trim().toLowerCase(),s=a?.trim().toLowerCase();if(!n&&!r&&!o&&!s)return e;let c=e;return n&&(c=c.filter(e=>n.includes(e.concept))),r&&(c=c.filter(e=>e.toConcept===r)),o&&(c=c.filter(e=>e.linkName?.toLowerCase().includes(o))),s&&(c=c.filter(e=>e.linkValue?.toLowerCase().includes(s))),c};export{e as t};
+//# sourceMappingURL=utils-CISRaEBm.js.map
